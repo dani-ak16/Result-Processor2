@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Results</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    {% extends "base.html" %}
+
+    {% block content %}
+        <h1>Student Results</h1>
+        <a href="/students">View Students</a> | 
+        <a href="/upload-results">Upload Results</a>
+        
+        <table>
+            <tr>
+                <th>Reg Number</th>
+                <th>Full Name</th>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Score</th>
+                <th>Term</th>
+                <th>Session</th>
+            </tr>
+            {% for result in results %}
+            <tr>
+                <td>{{ result.reg_number }}</td>
+                <td>{{ result.full_name }}</td>
+                <td>{{ result.class_name }}</td>
+                <td>{{ result.subject }}</td>
+                <td>{{ result.total_score }}</td>
+                <td>{{ result.term }}</td>
+                <td>{{ result.session }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endblock %}
+    
+</body>
+</html>

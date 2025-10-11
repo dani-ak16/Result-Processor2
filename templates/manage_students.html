@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Students</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Manage Student Biodata</h1>
+        <a href="/">&larr; Back to Home</a>
+        |
+        <a href="/download-student-template" download>Download Template File</a>
+        <div class="form-section">
+            <h2>Upload Student List</h2>
+            <form method="POST" action="/upload-students" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Class:</label>
+                    <select name="class_arm_id" required>
+                        {% for arm in classes %}
+                        <option value="{{ arm.arm_id }}">{{ arm.class_name }} {{ arm.arm }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Academic Session (e.g., 2024/2025):</label>
+                    <input type="text" name="session" value="{{ current_session }}" pattern="\d{4}/\d{4}" required>
+                    <small>Format: YYYY/YYYY (e.g., 2024/2025)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Term:</label>
+                    <select name="term" required>
+                        <option value="1">First Term</option>
+                        <option value="2">Second Term</option>
+                        <option value="3">Third Term</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Student List File (CSV/Excel):</label>
+                    <input type="file" name="file" accept=".csv,.xlsx" required>
+                    <small>Required column: <strong>full_name</strong></small>
+                </div>
+                
+                <button type="submit">Upload Student List</button>
+            </form>
+        </div>
+        
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <ol>
+                <li>Registration numbers will be automatically generated</li>
+                <li>Format: CLASS-YEAR-SERIAL (e.g., JSS1-2023-001)</li>
+                <li>Only student names are required in the upload file</li>
+            </ol>
+        </div>
+    </div>
+
+
+    <!-- <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const classSelect = document.querySelector('select[name="class_arm_id"]');
+            const departmentGroup = document.querySelector('.form-group:has(select[name="department"])');
+            
+            function toggleDepartment() {
+                const selectedClass = classSelect.options[classSelect.selectedIndex];
+                const classLevel = selectedClass.getAttribute('data-level');
+                departmentGroup.style.display = classLevel === 'SSS' ? 'block' : 'none';
+            }
+            
+            // Add data-level attribute to options
+            {% for class in classes %}
+            document.querySelector('option[value="{{ class.arm_id }}"]').setAttribute('data-level', '{{ class.level }}');
+            {% endfor %}
+            
+            classSelect.addEventListener('change', toggleDepartment);
+            toggleDepartment(); // Initial check
+        });
+    </script> -->
+</body>
+</html>

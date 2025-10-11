@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subject Teacher Portal - Kembos College</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        .portal-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px 30px 60px;
+        }
+
+        .portal-header {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+            padding: 40px 30px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .portal-header h1 {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 600;
+        }
+
+        .portal-header p {
+            margin-top: 10px;
+            font-size: 17px;
+            opacity: 0.9;
+        }
+
+        .portal-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .nav-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+            padding: 25px 20px;
+            border-left: 4px solid #1e3c72;
+            transition: all 0.3s ease;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 14px rgba(0,0,0,0.12);
+        }
+
+        .nav-card h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .nav-card p {
+            color: #444;
+            font-size: 15px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #1e3c72;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #2a5298;
+        }
+
+        .upload-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px 30px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+        }
+
+        .upload-section h3 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+        }
+
+        .upload-section form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .upload-section label {
+            font-weight: 500;
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .upload-section input,
+        .upload-section select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .upload-section button {
+            grid-column: span 2;
+            justify-self: start;
+        }
+
+        .recent-uploads {
+            margin-top: 40px;
+        }
+
+        .recent-uploads h3 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f5fb;
+            color: #1e3c72;
+        }
+
+        tr:hover {
+            background-color: #f9fbff;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #777;
+            padding: 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    {% extends "base.html" %}
+    {% block content %}
+
+    <div class="portal-container">
+        <div class="portal-header">
+            <h1>Subject Teacher Portal</h1>
+            <p>Upload student results and track completion status for your subjects</p>
+        </div>
+
+        <div class="portal-nav">
+            <div class="nav-card">
+                <h3>📤 Upload Results</h3>
+                <p>Upload student scores for your subject, class, and term. You can upload full-term or half-term reports.</p>
+                <a href="/upload-half-term-results" class="btn">Upload Half-Term Results</a>
+                <a href="/upload-full-term-results" class="btn">Upload Full-Term Results</a>
+            </div>
+
+            <!-- <div class="nav-card">
+                <h3>📈 Upload Status</h3>
+                <p>View how many students have results uploaded for each subject and term.</p>
+                <a href="/upload-status" class="btn">Check Status</a>
+            </div> -->
+
+            <div class="nav-card">
+                <h3>📥 Download Templates</h3>
+                <p>Get preformatted Excel templates for result uploads to avoid data entry errors.</p>
+                <form method="GET" action="/download-result-template">
+                    <select name="class_arm_id" required>
+                        {% for class in classes %}
+                        <option value="{{ class.arm_id }}">{{ class.class_name }} {{ class.arm }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="subject_id" required>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="term" required>
+                        <option value="1">1st Term</option>
+                        <option value="2">2nd Term</option>
+                        <option value="3">3rd Term</option>
+                    </select>
+                    <input type="text" name="session" value="{{ current_session }}" required>
+                    <button type="submit" class="btn">Download Template</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- <div class="upload-section">
+            <h3>Quick Upload Form</h3>
+            <form method="POST" action="/process-results" enctype="multipart/form-data">
+                <div>
+                    <label>Subject:</label>
+                    <select name="subject_id" required>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Class:</label>
+                    <select name="class_arm_id" required>
+                        {% for class in classes %}
+                        <option value="{{ class.arm_id }}">{{ class.class_name }} {{ class.arm }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Term:</label>
+                    <select name="term" required>
+                        <option value="1">First Term</option>
+                        <option value="2">Second Term</option>
+                        <option value="3">Third Term</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Session:</label>
+                    <input type="text" name="session" value="{{ current_session }}" required>
+                </div>
+                <div>
+                    <label>Report Type:</label>
+                    <select name="report_type">
+                        <option value="full_term">Full Term</option>
+                        <option value="half_term">Half Term</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Upload File:</label>
+                    <input type="file" name="file" accept=".csv,.xlsx" required>
+                </div>
+
+                <button type="submit" class="btn">Upload Results</button>
+            </form>
+        </div> -->
+
+        <div class="recent-uploads">
+            <h3>Recent Uploads</h3>
+            {% if recent_uploads %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Class</th>
+                        <th>Term</th>
+                        <th>Session</th>
+                        <th>Uploaded On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for upload in recent_uploads %}
+                    <tr>
+                        <td>{{ upload.subject_name }}</td>
+                        <td>{{ upload.class_name }} {{ upload.arm }}</td>
+                        <td>{{ upload.term }}</td>
+                        <td>{{ upload.session }}</td>
+                        <td>{{ upload.date_uploaded }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">No uploads recorded yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% endblock %}
+</body>
+</html>

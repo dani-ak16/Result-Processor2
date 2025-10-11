@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Class Management - {{ class_info.class_name }} {{ class_info.arm }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .status-no-students {
+            border-left-color: #6c757d;
+            background: #f8f9fa;
+        }
+
+        .status-no-students .status-indicator {
+            color: #6c757d;
+        }
+
+        .status-no-students .progress-fill {
+            background: #6c757d;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .alert-warning a {
+            color: #856404;
+            text-decoration: underline;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .upload-status-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .report-type-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            border-bottom-color: #1e3c72;
+            color: #1e3c72;
+            font-weight: 600;
+        }
+
+        .tab-button:hover {
+            background: #f8f9fa;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .status-card {
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6c757d;
+        }
+
+        .status-complete {
+            border-left-color: #28a745;
+            background: #f8fff9;
+        }
+
+        .status-partial {
+            border-left-color: #ffc107;
+            background: #fffef0;
+        }
+
+        .status-pending {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .subject-name {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1e3c72;
+        }
+
+        .progress-container {
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #28a745;
+            transition: width 0.3s ease;
+        }
+
+        .status-complete .progress-fill {
+            background: #28a745;
+        }
+
+        .status-partial .progress-fill {
+            background: #ffc107;
+        }
+
+        .status-pending .progress-fill {
+            background: #dc3545;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .status-indicator {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-complete .status-indicator {
+            color: #28a745;
+        }
+
+        .status-partial .status-indicator {
+            color: #e0a800;
+        }
+
+        .status-pending .status-indicator {
+            color: #dc3545;
+        }
+
+        .status-container {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .class-management-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .class-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 20px;
+            background: #1e3c72;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .btn:hover {
+            background: #2a5298;
+        }
+        .students-grid {
+            display: grid;
+            gap: 20px;
+        }
+        .student-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+        .student-photo {
+            width: 80px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid #e9ecef;
+        }
+        .student-info h4 {
+            margin-bottom: 5px;
+            color: #1e3c72;
+        }
+        .student-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .no-photo {
+            width: 80px;
+            height: 100px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+    {% extends "base.html" %}
+
+    {% block content %}
+        <div class="class-management-container">
+            <div class="class-header">
+                <h1>{{ class_info.class_name }} - {{ class_info.arm }}</h1>
+                <p>Academic Session: {{ session }} | Term: {{ term }}</p>
+                <a href="/class-teacher" class="btn" style="background: rgba(255,255,255,0.2);">← Back to Portal</a>
+            </div>
+
+            <div class="action-buttons">
+                <a href="{{ url_for('attendance_summary', class_arm_id=class_arm_id, term=term, session=session) }}" class="btn">
+                    📊 Record Attendance Summary
+                </a>
+                <button class="btn" onclick="showAssessmentModal()">
+                    📝 Manage Assessments
+                </button>
+                <a href="/manage-students" class="btn">
+                    👥 Upload Student Data
+                </a>
+                <a href="{{ url_for('view_students') }}?class_filter={{ class_arm_id }}&year_filter={{ year }}" class="btn">
+                    👀 View Students
+                </a>
+            </div>
+
+            <!-- Add this after the action-buttons div -->
+            <div class="upload-status-section">
+                <h3>📊 Results Upload Status</h3>
+                
+                {% set has_students = upload_status[0].total_students > 0 if upload_status else false %}
+                
+                {% if not has_students %}
+                <div class="alert alert-warning">
+                    ⚠️ No students found in this class for the selected term and session.
+                    <a href="/manage-students">Upload student data first</a>.
+                </div>
+                {% endif %}
+
+                <div class="status-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Half-Term Complete:</span>
+                        <span class="summary-value">
+                            {{ half_term_status|selectattr('status', 'equalto', 'complete')|list|length }}/{{ half_term_status|selectattr('total_students', 'gt', 0)|list|length }} subjects
+                        </span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Full-Term Complete:</span>
+                        <span class="summary-value">
+                            {{ full_term_status|selectattr('status', 'equalto', 'complete')|list|length }}/{{ full_term_status|selectattr('total_students', 'gt', 0)|list|length }} subjects
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Report Type Tabs -->
+                <div class="report-type-tabs">
+                    <button class="tab-button active" onclick="showReportType('half_term')">Half-Term Results</button>
+                    <button class="tab-button" onclick="showReportType('full_term')">Full-Term Results</button>
+                </div>
+                
+                <!-- Half-Term Status -->
+                <div id="half_term_status" class="status-container">
+                    <h4>Half-Term Results Status (CA1 + CA2 = 10 marks)</h4>
+                    <div class="status-grid">
+                        {% for subject in half_term_status %}
+                        <div class="status-card status-{{ subject.status }}">
+                            <div class="subject-name">{{ subject.subject_name }}</div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ subject.completion_percentage }}%"></div>
+                                </div>
+                                <div class="progress-text">
+                                    {{ subject.uploaded_count }}/{{ subject.total_students }} students
+                                    ({{ "%.1f"|format(subject.completion_percentage) }}%)
+                                </div>
+                            </div>
+                            <div class="status-indicator">
+                                {% if subject.status == 'complete' %}
+                                <span class="status-complete">✅ Complete</span>
+                                {% elif subject.status == 'partial' %}
+                                <span class="status-partial">🟡 {{ subject.uploaded_count }}/{{ subject.total_students }}</span>
+                                {% else %}
+                                <span class="status-pending">❌ Pending</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Full-Term Status -->
+                <div id="full_term_status" class="status-container" style="display: none;">
+                    <h4>Full-Term Results Status (CA1-4 + Exam = 100 marks)</h4>
+                    <div class="status-grid">
+                        {% for subject in full_term_status %}
+                        <div class="status-card status-{{ subject.status }}">
+                            <div class="subject-name">{{ subject.subject_name }}</div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ subject.completion_percentage }}%"></div>
+                                </div>
+                                <div class="progress-text">
+                                    {{ subject.uploaded_count }}/{{ subject.total_students }} students
+                                    ({{ "%.1f"|format(subject.completion_percentage) }}%)
+                                </div>
+                            </div>
+                            <div class="status-indicator">
+                                {% if subject.status == 'complete' %}
+                                <span class="status-complete">✅ Complete</span>
+                                {% elif subject.status == 'partial' %}
+                                <span class="status-partial">🟡 {{ subject.uploaded_count }}/{{ subject.total_students }}</span>
+                                {% else %}
+                                <span class="status-pending">❌ Pending</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="students-grid">
+                {% for student in students %}
+                <div class="student-card">
+                    <div>
+                        {% if student.photo %}
+                        <img src="{{ url_for('serve_uploaded_photo', filename=student.photo) }}"
+                            alt="Student Photo" class="student-photo">
+                        {% else %}
+                        <div class="no-photo">No Photo</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="student-info">
+                        <h4>{{ student.full_name }}</h4>
+                        <p><strong>Reg No:</strong> {{ student.reg_number }}</p>
+                        <p><strong>Age:</strong> {{ student.age or 'N/A' }} | <strong>Gender:</strong> {{ student.gender or 'N/A' }}</p>
+                        <p><strong>Department:</strong> {{ student.department_name or 'Junior' }}</p>
+                    </div>
+                    
+                    <!-- Photo Upload Form -->
+                    <div style="margin-top: 10px;">
+                        <form method="POST" action="/upload-student-photo/{{ student.reg_number }}" enctype="multipart/form-data" 
+                            style="display: flex; gap: 10px; align-items: center;">
+                            <input type="hidden" name="redirect_to" value="class_view">
+                            <input type="hidden" name="class_arm_id" value="{{ class_arm_id }}">
+                            <input type="file" name="photo" accept="image/*" required 
+                                style="flex: 1; padding: 5px; font-size: 12px;">
+                            <button type="submit" class="btn" style="padding: 6px 12px; font-size: 12px;">
+                                📸 Upload
+                            </button>
+                        </form>
+                    </div>
+                    </div>
+
+                    <!-- <div class="photo-upload-section">
+                        <form method="POST" action="/upload-photo/{{ student.reg_number }}" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: center;">
+                            <input type="hidden" name="redirect_to" value="class_view">
+                            <input type="hidden" name="class_arm_id" value="{{ class_arm_id }}">
+                            <input type="file" name="photo" accept="image/*" required style="flex: 1; padding: 5px;">
+                            <button type="submit" class="btn btn-small" style="padding: 5px 10px; font-size: 12px;">Upload Photo</button>
+                        </form>
+                    </div> -->
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Assessment Modal -->
+        <div id="assessmentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="background: white; margin: 50px auto; padding: 30px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                <h3>Manage Student Assessments</h3>
+                <p>Assessment management for {{ class_info.class_name }} - {{ class_info.arm }}</p>
+                
+                <form id="assessmentForm" method="POST" action="/assessments/submit">
+                    <input type="hidden" name="class_arm_id" value="{{ class_arm_id }}">
+                    <input type="hidden" name="term" value="{{ term }}">
+                    <input type="hidden" name="session" value="{{ session }}">
+                    
+                    <div style="margin: 20px 0;">
+                        <a href="{{ url_for('bulk_assessments', class_arm_id=class_arm_id, term=term, session=session) }}" class="btn">
+                            📊 Bulk Assessment Management
+                        </a>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="btn" onclick="hideAssessmentModal()">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="attendanceModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="background: white; margin: 50px auto; padding: 30px; border-radius: 10px; max-width: 500px;">
+                <h3>Record Attendance</h3>
+                <form action="{{ url_for('attendance_sheet_redirect') }}" method="GET">
+                    <input type="hidden" name="class_arm_id" value="{{ class_arm_id }}">
+                    <input type="hidden" name="term" value="{{ term }}">
+                    
+                    <div class="form-group">
+                        <label>Date:</label>
+                        <input type="date" name="date" value="{{ current_date }}" required>
+                    </div>
+                    
+                    <button type="submit" class="btn">Continue to Attendance Sheet</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideAttendanceModal()">Cancel</button>
+                </form>
+            </div>
+        </div>
+        <script>
+            function showReportType(reportType) {
+            // Hide all status containers
+            document.getElementById('half_term_status').style.display = 'none';
+            document.getElementById('full_term_status').style.display = 'none';
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected container and activate button
+            document.getElementById(reportType + '_status').style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        // Auto-refresh status every 30 seconds (optional)
+        setInterval(function() {
+            // You could implement AJAX refresh here if needed
+        }, 30000);
+            // Define the missing functions
+            function showAttendanceModal() {
+                document.getElementById('attendanceModal').style.display = 'block';
+            }
+
+            function hideAttendanceModal() {
+                document.getElementById('attendanceModal').style.display = 'none';
+            }
+
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('attendanceModal');
+                if (event.target === modal) {
+                    hideAttendanceModal();
+                }
+                
+                const assessmentModal = document.getElementById('assessmentModal');
+                if (event.target === assessmentModal) {
+                    hideAssessmentModal();
+                }
+            }
+
+            function showAssessmentModal() {
+                document.getElementById('assessmentModal').style.display = 'block';
+            }
+            
+            function hideAssessmentModal() {
+                document.getElementById('assessmentModal').style.display = 'none';
+            }
+            
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('assessmentModal');
+                if (event.target === modal) {
+                    hideAssessmentModal();
+                }
+            }
+        </script>
+    {% endblock %}
+    
+</body>
+</html>

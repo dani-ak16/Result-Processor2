@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Class Report</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Class Report for {{ class_name }} - Term {{ term }}, Year {{ year }}</h1>
+    <p>Date Generated: {{ date_generated }}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Registration Number</th>
+                <th>Full Name</th>
+                {% for subject in class_results[0].scores %}
+                    <th>{{ subject.name }}</th>
+                {% endfor %}
+                <th>Total</th>
+                <th>Average</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in class_results %}
+                <tr>
+                    <td>{{ result.student.reg_number }}</td>
+                    <td>{{ result.student.full_name }}</td>
+                    {% for score in result.scores %}
+                        <td>{{ score.score }}</td>
+                    {% endfor %}
+                    <td>{{ result.total }}</td>
+                    <td>{{ result.average | round(2) }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

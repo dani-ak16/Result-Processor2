@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bulk Assessments - {{ class_info.class_name }} {{ class_info.arm }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .assessments-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .assessments-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .assessment-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .student-assessment {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        .student-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        .student-photo {
+            width: 60px;
+            height: 75px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+        .no-photo {
+            width: 60px;
+            height: 75px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            color: #6c757d;
+        }
+        .assessment-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .assessment-category {
+            margin-bottom: 20px;
+        }
+        .category-title {
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .rating-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .rating-options {
+            display: flex;
+            gap: 5px;
+        }
+        .rating-option {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .rating-option.selected {
+            background: #1e3c72;
+            color: white;
+            border-color: #1e3c72;
+        }
+        .comments-section {
+            margin-top: 20px;
+        }
+        .comment-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            min-height: 80px;
+        }
+    </style>
+</head>
+<body>
+    <div class="assessments-container">
+        <div class="assessments-header">
+            <h1>Bulk Student Assessments</h1>
+            <h2>{{ class_info.class_name }} - {{ class_info.arm }}</h2>
+            <p>Term: {{ term }} | Session: {{ session }}</p>
+            <a href="{{ url_for('class_teacher_class_view', class_arm_id=class_arm_id, session=current_session, term=term) }}" 
+               class="btn" style="background: rgba(255,255,255,0.2);">← Back to Class</a>
+        </div>
+
+        <form method="POST" action="/assessments/submit-bulk" class="assessment-form">
+            <input type="hidden" name="class_arm_id" value="{{ class_arm_id }}">
+            <input type="hidden" name="term" value="{{ term }}">
+            <input type="hidden" name="session" value="{{ session }}">
+            
+            {% for student in students %}
+            <div class="student-assessment">
+                <div class="student-header">
+                    {% if student.photo %}
+                    <img src="{{ url_for('serve_uploaded_photo', filename=student.photo) }}" 
+                         alt="Student Photo" class="student-photo">
+                    {% else %}
+                    <div class="no-photo">No Photo</div>
+                    {% endif %}
+                    <div>
+                        <h3>{{ student.full_name }}</h3>
+                        <p>Reg: {{ student.reg_number }}</p>
+                    </div>
+                </div>
+                
+                {% set student_assessment = assessment_data.get(student.id, {}) %}
+                
+                <div class="assessment-grid">
+                    <!-- Psychomotor Skills -->
+                    <div class="assessment-category">
+                        <div class="category-title">Psychomotor Skills</div>
+                        
+                        <div class="rating-item">
+                            <span>Handwriting</span>
+                            <div class="rating-options">
+                                {% for i in range(1, 6) %}
+                                <div class="rating-option {% if student_assessment.get('handwriting') == i %}selected{% endif %}" 
+                                     onclick="selectRating(this, 'handwriting_{{ student.id }}', {{ i }})">
+                                    {{ i }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="handwriting_{{ student.id }}" 
+                                   value="{{ student_assessment.get('handwriting', '') }}">
+                        </div>
+                        
+                        <div class="rating-item">
+                            <span>Sports Participation</span>
+                            <div class="rating-options">
+                                {% for i in range(1, 6) %}
+                                <div class="rating-option {% if student_assessment.get('sports_participation') == i %}selected{% endif %}" 
+                                     onclick="selectRating(this, 'sports_{{ student.id }}', {{ i }})">
+                                    {{ i }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="sports_participation_{{ student.id }}" 
+                                   value="{{ student_assessment.get('sports_participation', '') }}">
+                        </div>
+                        
+                        <div class="rating-item">
+                            <span>Practical Skills</span>
+                            <div class="rating-options">
+                                {% for i in range(1, 6) %}
+                                <div class="rating-option {% if student_assessment.get('practical_skills') == i %}selected{% endif %}" 
+                                     onclick="selectRating(this, 'practical_{{ student.id }}', {{ i }})">
+                                    {{ i }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="practical_skills_{{ student.id }}" 
+                                   value="{{ student_assessment.get('practical_skills', '') }}">
+                        </div>
+                    </div>
+                    
+                    <!-- Affective Domain -->
+                    <div class="assessment-category">
+                        <div class="category-title">Affective Domain</div>
+                        
+                        <div class="rating-item">
+                            <span>Punctuality</span>
+                            <div class="rating-options">
+                                {% for i in range(1, 6) %}
+                                <div class="rating-option {% if student_assessment.get('punctuality') == i %}selected{% endif %}" 
+                                     onclick="selectRating(this, 'punctuality_{{ student.id }}', {{ i }})">
+                                    {{ i }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="punctuality_{{ student.id }}" 
+                                   value="{{ student_assessment.get('punctuality', '') }}">
+                        </div>
+                        
+                        <div class="rating-item">
+                            <span>Politeness</span>
+                            <div class="rating-options">
+                                {% for i in range(1, 6) %}
+                                <div class="rating-option {% if student_assessment.get('politeness') == i %}selected{% endif %}" 
+                                     onclick="selectRating(this, 'politeness_{{ student.id }}', {{ i }})">
+                                    {{ i }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="politeness_{{ student.id }}" 
+                                   value="{{ student_assessment.get('politeness', '') }}">
+                        </div>
+                        
+                        <div class="rating-item">
+                            <span>Neatness</span>
+                            <div class="rating-options">
+                                {% for i in range(1, 6) %}
+                                <div class="rating-option {% if student_assessment.get('neatness') == i %}selected{% endif %}" 
+                                     onclick="selectRating(this, 'neatness_{{ student.id }}', {{ i }})">
+                                    {{ i }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="neatness_{{ student.id }}" 
+                                   value="{{ student_assessment.get('neatness', '') }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Comments -->
+                <div class="comments-section">
+                    <div class="category-title">Comments</div>
+                    <textarea name="class_teacher_comment_{{ student.id }}" 
+                              placeholder="Class teacher's comment..."
+                              class="comment-box">{{ student_assessment.get('class_teacher_comment', '') }}</textarea>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="submit" class="btn">Save All Assessments</button>
+                <a href="{{ url_for('class_teacher_class_view', class_arm_id=class_arm_id, session=session, term=term) }}" 
+                   class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function selectRating(element, fieldName, rating) {
+            // Remove selected class from all options in this group
+            const options = element.parentElement.querySelectorAll('.rating-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            
+            // Update the hidden input value
+            const hiddenInput = document.querySelector(`input[name="${fieldName}"]`);
+            hiddenInput.value = rating;
+        }
+        
+        // Initialize ratings from hidden inputs on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[type="hidden"]').forEach(input => {
+                if (input.value) {
+                    const fieldName = input.name;
+                    const rating = parseInt(input.value);
+                    const ratingOption = document.querySelector(`.rating-option[onclick*="${fieldName}, ${rating}"]`);
+                    if (ratingOption) {
+                        ratingOption.classList.add('selected');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

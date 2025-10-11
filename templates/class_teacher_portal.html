@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Class Teacher Portal - Kembos College</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        .portal-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 30px 60px;
+        }
+
+        .portal-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px 30px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .portal-header h1 {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 600;
+        }
+
+        .portal-header p {
+            margin-top: 10px;
+            font-size: 17px;
+            opacity: 0.9;
+        }
+
+        .portal-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .nav-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+            padding: 25px 20px;
+            border-left: 4px solid #1e3c72;
+            transition: all 0.3s ease;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 14px rgba(0,0,0,0.12);
+        }
+
+        .nav-card h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .nav-card p {
+            color: #444;
+            font-size: 15px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #1e3c72;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #2a5298;
+        }
+
+        .class-selector {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px 30px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+        }
+
+        .class-selector h3 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+        }
+
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .class-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #1e3c72;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .class-card:hover {
+            background: #eef2f7;
+            border-color: #1e3c72;
+            box-shadow: 0 3px 10px rgba(30, 60, 114, 0.1);
+            transform: translateY(-4px);
+        }
+
+        .class-card h4 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .class-card p {
+            margin: 5px 0 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #777;
+            padding: 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    {% extends "base.html" %}
+    {% block content %}
+
+    <div class="portal-container">
+        <div class="portal-header">
+            <h1>Class Teacher Portal</h1>
+            <p>Manage student records, photos, reports, and class analytics</p>
+        </div>
+
+        <div class="portal-nav">
+            <div class="nav-card">
+                <h3>📊 Student Management</h3>
+                <p>Upload student data, manage profiles, and update personal information.</p>
+                <a href="/manage-students" class="btn">Manage Students</a>
+            </div>
+
+            <div class="nav-card">
+                <h3>📸 Photo Management</h3>
+                <p>Upload and manage student photographs.</p>
+                <a href="/student-photos" class="btn">Manage Photos</a>
+            </div>
+
+            <div class="nav-card">
+                <h3>📄 Generate Reports</h3>
+                <p>Generate report sheets for individual students or entire classes.</p>
+                <a href="/generate-reports" class="btn">Generate Reports</a>
+            </div>
+
+            <div class="nav-card">
+                <h3>📥 Download Student Template</h3>
+                <p>Get a preformatted Excel sheet to easily upload new student data for your class.</p>
+                <a href="/download-student-template" class="btn">Download Template</a>
+            </div>
+        </div>
+
+        <div class="class-selector">
+            <h3>🎓 Select Your Class</h3>
+            {% if classes %}
+            <div class="class-grid">
+                {% for class in classes %}
+                <a href="{{ url_for('class_teacher_class_view', class_arm_id=class.arm_id, session=current_session, term=current_term) }}" 
+                   class="class-card">
+                    <h4>{{ class.class_name }} - {{ class.arm }}</h4>
+                    <p>{{ class.level }} Level</p>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                No classes available for your account.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% endblock %}
+</body>
+</html>

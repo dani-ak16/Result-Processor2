@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance Summary - {{ class_info.class_name }} {{ class_info.arm }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .attendance-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .attendance-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .attendance-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .school-days-input {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .student-attendance {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        .student-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .student-photo {
+            width: 60px;
+            height: 75px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+        .no-photo {
+            width: 60px;
+            height: 75px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            color: #6c757d;
+        }
+        .attendance-fields {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .attendance-field {
+            display: flex;
+            flex-direction: column;
+        }
+        .attendance-field label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        .attendance-field input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .attendance-stats {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="attendance-container">
+        <div class="attendance-header">
+            <h1>Attendance Summary</h1>
+            <h2>{{ class_info.class_name }} - {{ class_info.arm }}</h2>
+            <p>Term: {{ term }} | Year: {{ year }}</p>
+            <a href="{{ url_for('class_teacher_class_view', class_arm_id=class_arm_id, session=session, term=term) }}" 
+               class="btn" style="background: rgba(255,255,255,0.2);">← Back to Class</a>
+        </div>
+
+        <form method="POST" action="/attendance/submit-summary" class="attendance-form">
+            <input type="hidden" name="class_arm_id" value="{{ class_arm_id }}">
+            <input type="hidden" name="term" value="{{ term }}">
+            <input type="hidden" name="year" value="{{ year }}">
+            
+            <div class="school-days-input">
+                <h3>School Term Information</h3>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div class="attendance-field">
+                        <label for="total_school_days">Total School Days in Term:</label>
+                        <input type="number" id="total_school_days" name="total_school_days" 
+                               value="{{ total_school_days or '' }}" min="1" max="200" required>
+                    </div>
+                    <div style="color: #6c757d; font-size: 14px;">
+                        Enter the total number of school days for this term
+                    </div>
+                </div>
+            </div>
+
+            {% for student in students %}
+            <div class="student-attendance">
+                <div class="student-header">
+                    {% if student.photo %}
+                    <img src="{{ url_for('serve_uploaded_photo', filename=student.photo) }}"
+                         alt="Student Photo" class="student-photo">
+                    {% else %}
+                    <div class="no-photo">No Photo</div>
+                    {% endif %}
+                    <div>
+                        <h3>{{ student.full_name }}</h3>
+                        <p>Reg: {{ student.reg_number }}</p>
+                    </div>
+                </div>
+                
+                {% set student_attendance = attendance_data.get(student.id, {}) %}
+                
+                <div class="attendance-fields">
+                    <div class="attendance-field">
+                        <label for="present_{{ student.id }}">Days Present:</label>
+                        <input type="number" id="present_{{ student.id }}" 
+                               name="present_{{ student.id }}" 
+                               value="{{ student_attendance.get('days_present', '') }}" 
+                               min="0" max="{{ total_school_days or 200 }}" 
+                               onchange="calculateAbsent({{ student.id }})" required>
+                    </div>
+                    
+                    <div class="attendance-field">
+                        <label for="absent_{{ student.id }}">Days Absent:</label>
+                        <input type="number" id="absent_{{ student.id }}" 
+                               name="absent_{{ student.id }}" 
+                               value="{{ student_attendance.get('days_absent', '') }}" 
+                               min="0" max="{{ total_school_days or 200 }}"
+                               onchange="calculatePresent({{ student.id }})" required>
+                    </div>
+                    
+                    <div class="attendance-field">
+                        <label for="late_{{ student.id }}">Days Late:</label>
+                        <input type="number" id="late_{{ student.id }}" 
+                               name="late_{{ student.id }}" 
+                               value="{{ student_attendance.get('days_late', '') }}" 
+                               min="0" max="{{ total_school_days or 200 }}" required>
+                    </div>
+                    
+                    <div class="attendance-field">
+                        <label>Attendance Rate:</label>
+                        <div id="attendance_rate_{{ student.id }}" class="attendance-stats">
+                            {% if student_attendance %}
+                                {{ "%.1f"|format((student_attendance.get('days_present', 0) / total_school_days * 100) if total_school_days else 0) }}%
+                            {% else %}
+                                --
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="submit" class="btn">Save Attendance Summary</button>
+                <a href="{{ url_for('class_teacher_class_view', class_arm_id=class_arm_id, session=session, term=term) }}" 
+                   class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function calculateAbsent(studentId) {
+            const totalDays = parseInt(document.getElementById('total_school_days').value) || 0;
+            const present = parseInt(document.getElementById('present_' + studentId).value) || 0;
+            const absentInput = document.getElementById('absent_' + studentId);
+            
+            if (totalDays > 0) {
+                const absent = totalDays - present;
+                absentInput.value = absent > 0 ? absent : 0;
+                updateAttendanceRate(studentId, present, totalDays);
+            }
+        }
+        
+        function calculatePresent(studentId) {
+            const totalDays = parseInt(document.getElementById('total_school_days').value) || 0;
+            const absent = parseInt(document.getElementById('absent_' + studentId).value) || 0;
+            const presentInput = document.getElementById('present_' + studentId);
+            
+            if (totalDays > 0) {
+                const present = totalDays - absent;
+                presentInput.value = present > 0 ? present : 0;
+                updateAttendanceRate(studentId, present, totalDays);
+            }
+        }
+        
+        function updateAttendanceRate(studentId, present, totalDays) {
+            const rateElement = document.getElementById('attendance_rate_' + studentId);
+            if (totalDays > 0) {
+                const rate = (present / totalDays * 100).toFixed(1);
+                rateElement.textContent = rate + '%';
+            } else {
+                rateElement.textContent = '--';
+            }
+        }
+        
+        // Update all attendance rates when total school days changes
+        document.getElementById('total_school_days').addEventListener('input', function() {
+            const totalDays = parseInt(this.value) || 0;
+            {% for student in students %}
+                const present{{ student.id }} = parseInt(document.getElementById('present_{{ student.id }}').value) || 0;
+                updateAttendanceRate({{ student.id }}, present{{ student.id }}, totalDays);
+            {% endfor %}
+        });
+    </script>
+</body>
+</html>

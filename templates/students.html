@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Records</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+    {% extends "base.html" %}
+
+    {% block content %}
+        <div class="container">
+            <h1>Student Records</h1>
+            <a href="/">&larr; Back to Home</a>
+            
+            <div class="filter-section">
+                <form method="GET" action="/students">
+                    <div class="form-group">
+                        <label>Class:</label>
+                        <select name="class_filter" onchange="this.form.submit()">
+                            <option value="all" {% if selected_class == 'all' %}selected{% endif %}>All Classes</option>
+                            {% for class in classes %}
+                            <!-- CHANGE: Use class.arm_id instead of class.id -->
+                            <option value="{{ class.arm_id }}" {% if selected_class == class.arm_id|string %}selected{% endif %}>
+                                <!-- CHANGE: Use class.class_name and class.arm instead of class.name -->
+                                {{ class.class_name }} {{ class.arm }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Session:</label>
+                        <select name="session_filter" onchange="this.form.submit()">
+                            {% for session in sessions %}
+                            <option value="{{ session }}" {% if selected_session == session %}selected{% endif %}>
+                                {{ session }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Term:</label>
+                        <select name="term_filter" onchange="this.form.submit()">
+                            <option value="1" {% if selected_term == 1 %}selected{% endif %}>First Term</option>
+                            <option value="2" {% if selected_term == 2 %}selected{% endif %}>Second Term</option>
+                            <option value="3" {% if selected_term == 3 %}selected{% endif %}>Third Term</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Registration Number</th>
+                        <th>Full Name</th>
+                        <th>Age</th>
+                        <th>Class</th>
+                        <th>Year</th>
+                        <th>Photo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.reg_number }}</td>
+                        <td>{{ student.full_name }}</td>
+                        <td>{{ student.age or '' }}</td>
+                        <td>{{ student.class_name }}</td>
+                        <td>{{ student.session }}</td>
+                        <td>
+                            {% if student.photo %}
+                                <img src="{{ url_for('serve_uploaded_photo', filename=student.photo) }}"
+                                    alt="Student Photo" class="student-photo" width="60" alt="Photo of {{ student.full_name }}">
+                            {% else %}
+                                <a href="/student-photos">Upload Photo</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7">No students found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <script>
+        function viewReport(regNumber, year) {
+            const termSelect = document.getElementById("term-" + regNumber);
+            const term = termSelect.value;
+            const url = `/student-report?reg_number=${regNumber}&term=${term}&year=${year}`;
+            window.location.href = url;
+        }
+        </script>
+    {% endblock %}
+
+</body>
+</html>

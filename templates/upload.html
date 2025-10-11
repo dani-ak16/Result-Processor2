@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Results Upload</title>
+</head>
+<body>
+    <h1>Upload Student Scores</h1>
+    <!-- Add action="/upload" to the form tag -->
+    <form method="POST" action="/upload" enctype="multipart/form-data">
+        <label>Subject:</label>
+        <input type="text" name="subject" required><br><br>
+        
+        <label>Term:</label>
+        <select name="term" required>
+            <option value="1">Term 1</option>
+            <option value="2">Term 2</option>
+            <option value="3">Term 3</option>
+        </select><br><br>
+        
+        <label>Year:</label>
+        <input type="number" name="year" value="{{ current_year }}" required><br><br>
+        
+        <label>Score File (CSV/Excel):</label>
+        <input type="file" name="file" accept=".csv,.xlsx" required><br><br>
+        
+        <input type="submit" value="Upload">
+    </form>
+</body>
+</html>

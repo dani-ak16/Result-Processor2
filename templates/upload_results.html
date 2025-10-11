@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Results</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Student Scores</h1>
+        <a href="/">&larr; Back to Home</a>
+        
+        <form method="POST" action="/process-results" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Subject:</label>
+                <select name="subject_id" required>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Class:</label>
+                <select name="class_arm_id" required>
+                    {% for class in classes %}
+                    <option value="{{ class.arm_id }}">{{ class.class_name }} {{ class.arm }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Term:</label>
+                <select name="term" required>
+                    <option value="1">Term 1</option>
+                    <option value="2">Term 2</option>
+                    <option value="3">Term 3</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Academic Session:</label>
+                <input type="text" name="session" value="{{ current_session }}" pattern="\d{4}/\d{4}" required>
+                <small>Format: YYYY/YYYY (e.g., 2024/2025)</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Score File (CSV/Excel):</label>
+                <input type="file" name="file" accept=".csv,.xlsx" required>
+                <small>Required columns: <strong>full_name</strong>, <strong>score</strong></small>
+            </div>
+            
+            <button type="submit">Upload Scores</button>
+        </form>
+    </div>
+</body>
+</html>

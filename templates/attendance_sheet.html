@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance Sheet - {{ class_info.class_name }} {{ class_info.arm }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .attendance-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .attendance-header {
+            background: #1e3c72;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .student-attendance {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .attendance-item {
+            display: grid;
+            grid-template-columns: 1fr 200px;
+            gap: 20px;
+            padding: 15px 0;
+            border-bottom: 1px solid #e9ecef;
+            align-items: center;
+        }
+        .attendance-options {
+            display: flex;
+            gap: 10px;
+        }
+        .attendance-option {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .attendance-option.selected {
+            background: #1e3c72;
+            color: white;
+            border-color: #1e3c72;
+        }
+        .attendance-option.present { border-color: #28a745; }
+        .attendance-option.absent { border-color: #dc3545; }
+        .attendance-option.late { border-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="attendance-container">
+        <div class="attendance-header">
+            <h1>Attendance Sheet</h1>
+            <h2>{{ class_info.class_name }} - {{ class_info.arm }}</h2>
+            <p>Date: {{ date }} | Term: {{ term }}</p>
+        </div>
+        
+        <form method="POST" action="/attendance/submit">
+            <input type="hidden" name="class_arm_id" value="{{ class_arm_id }}">
+            <input type="hidden" name="date" value="{{ date }}">
+            <input type="hidden" name="term" value="{{ term }}">
+            
+            <div class="student-attendance">
+                {% for student in students %}
+                <div class="attendance-item">
+                    <div>
+                        <strong>{{ student.full_name }}</strong>
+                        <br><small>Reg: {{ student.reg_number }}</small>
+                    </div>
+                    <div class="attendance-options">
+                        {% set current_status = existing_attendance.get(student.id, 'present') %}
+                        <div class="attendance-option present {% if current_status == 'present' %}selected{% endif %}" 
+                             onclick="selectAttendance(this, '{{ student.id }}', 'present')">
+                            Present
+                        </div>
+                        <div class="attendance-option absent {% if current_status == 'absent' %}selected{% endif %}" 
+                             onclick="selectAttendance(this, '{{ student.id }}', 'absent')">
+                            Absent
+                        </div>
+                        <div class="attendance-option late {% if current_status == 'late' %}selected{% endif %}" 
+                             onclick="selectAttendance(this, '{{ student.id }}', 'late')">
+                            Late
+                        </div>
+                        <input type="hidden" name="status_{{ student.id }}" value="{{ current_status }}">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <button type="submit" class="btn">Save Attendance</button>
+                <a href="/class-teacher" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function selectAttendance(element, studentId, status) {
+            // Remove selected class from all options in this group
+            const options = element.parentElement.querySelectorAll('.attendance-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            
+            // Update the hidden input value
+            const hiddenInput = element.parentElement.querySelector('input[type="hidden"]');
+            hiddenInput.value = status;
+        }
+    </script>
+</body>
+</html>

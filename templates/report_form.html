@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Student Reports</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        form div {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        hr {
+            margin: 25px 0;
+            border: 0;
+            height: 1px;
+            background: #ddd;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .note {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generate Reports</h1>
+        <a href="/">&larr; Back to Home</a>
+
+        <form method="POST" action="/generate-reports">
+            <!-- CLASS -->
+            <div>
+                <label for="class_arm_id">Class & Arm:</label>
+                <select name="class_arm_id" id="class_arm_id" required>
+                    {% for class in classes %}
+                        <option value="{{ class.arm_id }}">{{ class.class_name }} {{ class.arm }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- SESSION -->
+            <div>
+                <label for="session">Session:</label>
+                <input type="text" id="session" name="session" value="{{ current_session }}" placeholder="e.g. 2025/2026" required>
+            </div>
+
+            <!-- TERM -->
+            <div>
+                <label for="term">Term:</label>
+                <select name="term" id="term" required>
+                    <option value="1">First Term</option>
+                    <option value="2">Second Term</option>
+                    <option value="3">Third Term</option>
+                </select>
+            </div>
+
+            <!-- REPORT TYPE -->
+            <div>
+                <label for="report_type">Report Type:</label>
+                <select name="report_type" id="report_type" required>
+                    <option value="full_term">Full Term</option>
+                    <option value="half_term">Half Term</option>
+                </select>
+            </div>
+
+            <hr>
+
+            <!-- SINGLE STUDENT -->
+            <h3>Single Student Report (Optional)</h3>
+            <p class="note">Leave blank to generate reports for the entire class.</p>
+            <input type="text" name="full_name" placeholder="Enter student full name">
+
+            <div style="text-align:center; margin-top:25px;">
+                <button type="submit" class="btn">Generate Report(s)</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
