@@ -1,27 +1,9 @@
-# Core Web Framework
 Flask==3.0.3
-
-# For Excel (XLSX) template generation and uploads
+weasyprint==62.2
 pandas==2.2.3
 openpyxl==3.1.5
-
-# For database connections and migrations (optional but useful)
-Flask-SQLAlchemy==3.1.1
-
-# For form handling and file uploads
-Werkzeug==3.0.3
-
-# For handling image uploads and resizing
-Pillow==10.4.0
-
-# For PDF report generation
 reportlab==4.2.2
-
-# For HTML-to-RTF/Docx conversions (optional)
-pypandoc==1.13
-
-# For improved command-line serving (optional)
-waitress==3.0.0
-
-# For environment variable loading (optional but clean)
+Pillow==10.4.0
+Werkzeug==3.0.3
 python-dotenv==1.0.1
+gunicorn==23.0.0
