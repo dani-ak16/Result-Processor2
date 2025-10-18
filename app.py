@@ -1,4 +1,5 @@
 import os
+import socket
 import pandas as pd
 from flask import Flask, render_template, request, redirect, abort, url_for, g, session, send_file, send_from_directory
 from werkzeug.utils import secure_filename
@@ -2056,6 +2057,15 @@ def allowed_photo_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in {'jpg', 'jpeg', 'png', 'gif'}
 
-if __name__ == '__main__':
-    init_db()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == "__main__":
+    # Automatically get your local network IP address
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+
+    print(f"\n🚀 Server running on:")
+    print(f"   Local:     http://127.0.0.1:5000")
+    print(f"   Network:   http://{local_ip}:5000\n")
+    print("📡 Connect other devices on the same Wi-Fi using the 'Network' address above.\n")
+
+    # Run Flask on all interfaces (so others can access it)
+    app.run(host="0.0.0.0", port=5000, debug=True)
