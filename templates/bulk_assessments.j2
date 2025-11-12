@@ -243,6 +243,10 @@
                     <textarea name="class_teacher_comment_{{ student.id }}" 
                               placeholder="Class teacher's comment..."
                               class="comment-box">{{ student_assessment.get('class_teacher_comment', '') }}</textarea>
+                    
+                    <textarea name="class_teacher_comment_{{ student.id }}" 
+                              placeholder="Principal's comment..."
+                              class="comment-box">{{ student_assessment.get('principal_comment', '') }}</textarea>
                 </div>
             </div>
             {% endfor %}

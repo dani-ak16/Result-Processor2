@@ -74,6 +74,22 @@
             background: #f8f9fa;
         }
 
+        .portal-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .nav-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+            padding: 25px 20px;
+            border-left: 4px solid #1e3c72;
+            transition: all 0.3s ease;
+        }
+
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -269,18 +285,32 @@
             </div>
 
             <div class="action-buttons">
-                <a href="{{ url_for('attendance_summary', class_arm_id=class_arm_id, term=term, session=session) }}" class="btn">
-                    📊 Record Attendance Summary
-                </a>
+                <!-- <h3>📊 Student Management</h3>
+                    <p>Upload student data, manage attendance records, and upload photos.</p> -->
+                    <a href="/manage-students" class="btn">Upload Student Data</a>
+                    <a href="{{ url_for('attendance_summary', class_arm_id=class_arm_id, term=term, session=session) }}" class="btn">
+                        📊 Record Attendance Summary
+                    </a>
+                    <a href="/student-photos" class="btn">Manage Photos</a>
                 <button class="btn" onclick="showAssessmentModal()">
                     📝 Manage Assessments
                 </button>
-                <a href="/manage-students" class="btn">
-                    👥 Upload Student Data
-                </a>
-                <a href="{{ url_for('view_students') }}?class_filter={{ class_arm_id }}&year_filter={{ year }}" class="btn">
-                    👀 View Students
-                </a>
+                
+            </div>
+
+            <div class="portal-nav">
+
+                <div class="nav-card">
+                    <h3>📄 Generate Reports</h3>
+                    <p>Generate report sheets for individual students or entire classes.</p>
+                    <a href="/generate-reports" class="btn">Generate Reports</a>
+                </div>
+
+                <div class="nav-card">
+                    <h3>📥 Download Student Template</h3>
+                    <p>Get a preformatted Excel sheet to easily upload new student data for your class.</p>
+                    <a href="/download-student-template" class="btn">Download Template</a>
+                </div>
             </div>
 
             <!-- Add this after the action-buttons div -->

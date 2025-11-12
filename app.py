@@ -3,9 +3,13 @@ import socket
 import pandas as pd
 from flask import Flask, render_template, request, redirect, abort, url_for, g, session, send_file, send_from_directory
 from werkzeug.utils import secure_filename
+from playwright.sync_api import sync_playwright
 import sqlite3
-import zipfile
+import zipfile, tempfile
 from io import BytesIO
+from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font, PatternFill, Alignment, Protection
 from datetime import datetime
 from weasyprint import HTML
 
@@ -377,11 +381,16 @@ def initialize_subjects_and_departments():
         ("English", "junior", 1),
         ("Basic Science", "junior", 0),
         ("Basic Technology", "junior", 0),
+        ("Business Studies", "junior", 0),
         ("Social Studies", "junior", 0),
         ("Cultural and Creative Arts", "junior", 0),
+        ("Igbo", "junior", 0),
+        ("Yoruba", "junior", 0),
         ("French", "junior", 0),
+        ("Information and Communication Technology", "junior", 0),
+        ("Music", "junior", 0),
+        ("History", "junior", 0),
         ("Physical and Health Education", "junior", 0),
-        ("Computer Studies", "junior", 0),
         ("Civic Education", "junior", 1),
 
         # Senior Subjects (Common Core)
@@ -538,7 +547,6 @@ def initialize_subjects_and_departments():
     db.commit()
     print("Subjects, departments, and class-subject links initialized successfully.")
 
-
 def initialize_class_subject_requirements():
     """Set up subject requirements for each class arm"""
     db = get_db()
@@ -583,11 +591,9 @@ def initialize_class_subject_requirements():
 # Routes
 @app.route('/')
 def home():
-    classes_with_data = get_class_status()
     current_session = get_current_session()
     current_term = get_current_term()
     return render_template('home.html', 
-                         classes=classes_with_data,
                          current_year=datetime.now().year,
                          session=current_session,
                          term=current_term)
@@ -1343,43 +1349,62 @@ def generate_reports():
                 """, (student['id'], class_arm_id, term, session))
             attendance_summary = cursor.fetchone()
 
+            cursor.execute("""
+                SELECT handwriting, sports_participation, practical_skills,
+                    punctuality, politeness, neatness,
+                    class_teacher_comment, principal_comment
+                FROM student_assessments
+                WHERE student_id = ? AND class_arm_id = ? AND term = ? AND session = ?
+            """, (student["id"], class_arm_id, term, session))
+            assessment = cursor.fetchone()
+
             total = sum(r["total_score"] for r in scores)
             average = total / len(scores)
             
             # Choose template based on report type
             template_name = "half_term_report.html" if report_type == "half_term" else "full_term_report.html"
+            logo_path = os.path.join(app.root_path, 'static', 'kembos_logo_nobg.png')
+            photo_path = os.path.join(app.root_path, 'uploads', student['photo']) if student['photo'] else None
             
-            html_content = render_template(template_name,
-                                           student=student,
-                                           class_name=student["class_name"],
-                                           scores=scores,
-                                           term=term,
-                                           session=session,
-                                           average=average,
-                                           report_type=report_type,
-                                           attendance_summary=attendance_summary,
-                                           year=datetime.now().year,
-                                           current_date=datetime.now().strftime("%Y-%m-%d"))
-            # Render HTML → PDF
-            # html_content = render_template("student_report.html",
+            # html_content = render_template(template_name,
             #                                student=student,
             #                                class_name=student["class_name"],
             #                                scores=scores,
             #                                term=term,
+            #                                logo_path=logo_path,
+            #                                photo_path=photo_path,
             #                                session=session,
             #                                average=average,
+            #                                report_type=report_type,
+            #                                attendance_summary=attendance_summary,
+            #                                year=datetime.now().year,
             #                                current_date=datetime.now().strftime("%Y-%m-%d"))
 
-            pdf_file = f"{student['full_name']}_report.pdf"
-            pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], pdf_file)
-            HTML(string=html_content, base_url=request.root_path).write_pdf(pdf_path)
+            # pdf_file = f"{student['full_name']}_report.pdf"
+            # pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], pdf_file)
+            # HTML(string=html_content, base_url=request.host_url).write_pdf(pdf_path)
 
-            return send_file(pdf_path, as_attachment=True)
+            # return send_file(pdf_path, as_attachment=True)
 
-        # --- Whole Class Batch Reports ---
+            return render_template(template_name,
+                                           student=student,
+                                           class_name=student["class_name"],
+                                           scores=scores,
+                                           term=term,
+                                           logo_path=logo_path,
+                                           photo_path=photo_path,
+                                           session=session,
+                                           average=average,
+                                           report_type=report_type,
+                                           attendance_summary=attendance_summary,
+                                           assessment=assessment,
+                                           year=datetime.now().year,
+                                           current_date=datetime.now().strftime("%Y-%m-%d"))
+
+       # --- Whole Class Batch Reports ---
         cursor.execute("""
             SELECT s.id, s.reg_number, s.full_name, s.age, s.photo, 
-                   c.name || ' ' || a.arm AS class_name
+                c.name || ' ' || a.arm AS class_name
             FROM students s
             JOIN student_classes sc ON s.id = sc.student_id
             JOIN class_arms a ON sc.class_arm_id = a.id
@@ -1392,53 +1417,150 @@ def generate_reports():
         if not students:
             return render_template("error.html", message="No students found for this class/year")
 
-        zip_filename = f"class_{class_arm_id}_term{term}_{session}_reports.zip"
-        zip_path = os.path.join(app.config['UPLOAD_FOLDER'], zip_filename)
+        report_type = request.form.get("report_type", "full_term")
 
-        with zipfile.ZipFile(zip_path, 'w') as zf:
-            for student in students:
-                cursor.execute("""
-                    SELECT sub.name AS subject, sc.score
-                    FROM scores sc
-                    JOIN subjects sub ON sc.subject_id = sub.id
-                    WHERE sc.student_id = ? AND sc.term = ? AND sc.session = ?
-                """, (student["id"], term, session))
-                scores = cursor.fetchall()
-                if not scores:
-                    continue
+        # Sanitize ZIP filename
+        safe_session = session.replace("/", "_")
+        zip_filename = f"class_{class_arm_id}_term{term}_{safe_session}_reports.zip"
 
-                total = sum(r["total_score"] for r in scores)
-                average = total / len(scores)
+        # Prepare in-memory ZIP buffer
+        zip_buffer = BytesIO()
 
-                html_content = render_template("student_report.html",
-                                               student=student,
-                                               class_name=student["class_name"],
-                                               scores=scores,
-                                               term=term,
-                                               session=session,
-                                               average=average,
-                                               current_date=datetime.now().strftime("%Y-%m-%d"))
+        # Detect your current host (local or LAN)
+        host_url = request.host_url.rstrip('/')
 
-                pdf_file = f"{student['full_name']}_report.pdf"
-                pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], pdf_file)
-                HTML(string=html_content, base_url=request.root_path).write_pdf(pdf_path)
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context()
+            
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+                for student in students:
+                    reg_number = student["reg_number"]
+                    
+                    # Construct the exact URL for the student's report page
+                    report_url = f"{host_url}/preview-report?student_id={student['id']}&term={term}&session={session}&report_type={report_type}"
+                    
+                    pdf_filename = f"{student['full_name'].replace(' ', '_')}_report.pdf"
+                    pdf_path = os.path.join(tempfile.gettempdir(), pdf_filename)
+                    
+                    page = context.new_page()
+                    print(f"🧾 Generating PDF for {student['full_name']} ({report_type})")
+                    
+                    try:
+                        page.goto(report_url, wait_until="networkidle")
+                        page.pdf(
+                            path=pdf_path,
+                            format="A4",
+                            print_background=True,
+                            margin={"top": "10mm", "bottom": "10mm", "left": "10mm", "right": "10mm"}
+                        )
+                        zf.write(pdf_path, pdf_filename)
+                    except Exception as e:
+                        print(f"❌ Error generating report for {student['full_name']}: {e}")
+                    finally:
+                        if os.path.exists(pdf_path):
+                            os.remove(pdf_path)
+                        page.close()
+            
+            browser.close()
 
-                # Add to ZIP
-                zf.write(pdf_path, pdf_file)
-                os.remove(pdf_path)
+        # Return ZIP as downloadable file
+        zip_buffer.seek(0)
+        return send_file(
+            zip_buffer,
+            as_attachment=True,
+            download_name=zip_filename,
+            mimetype="application/zip"
+        )
 
-        return send_file(zip_path, as_attachment=True)
 
     # --- GET request → show report form ---
     cursor.execute("""
-        SELECT a.id AS arm_id, c.name AS class_name, a.arm
-        FROM class_arms a
-        JOIN classes c ON a.class_id = c.id
-        ORDER BY c.id, a.arm
-    """)
+                SELECT a.id AS arm_id, c.name AS class_name, a.arm
+                FROM class_arms a
+                JOIN classes c ON a.class_id = c.id
+                ORDER BY c.id, a.arm
+            """)
     classes = cursor.fetchall()
     current_session=get_current_session()
     return render_template("report_form.html", classes=classes, current_session=current_session)
+
+@app.route("/preview-report")
+def preview_report():
+    student_id = request.args.get("student_id")
+    term = request.args.get("term")
+    session = request.args.get("session")
+    report_type = request.args.get("report_type", "full_term")
+
+    if not student_id or not term or not session:
+        return "Missing parameters", 400
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # Get student info
+    cursor.execute("""
+        SELECT s.id, s.reg_number, s.full_name, s.age, s.photo, 
+               c.name || ' ' || a.arm AS class_name, s.department_id, s.gender
+        FROM students s
+        JOIN student_classes sc ON s.id = sc.student_id
+        JOIN class_arms a ON sc.class_arm_id = a.id
+        JOIN classes c ON a.class_id = c.id
+        WHERE s.id = ? AND sc.session = ?
+    """, (student_id, session))
+    student = cursor.fetchone()
+    if not student:
+        return "Student not found", 404
+
+    # Get scores
+    cursor.execute("""
+        SELECT sub.name AS subject, 
+               sc.ca1_score, sc.ca2_score, sc.ca3_score, sc.ca4_score,
+               sc.exam_score, sc.total_score
+        FROM scores sc
+        JOIN subjects sub ON sc.subject_id = sub.id
+        WHERE sc.student_id = ? AND sc.term = ? AND sc.session = ? AND sc.report_type = ?
+    """, (student_id, term, session, report_type))
+    scores = cursor.fetchall()
+
+    # Get attendance
+    cursor.execute("""
+        SELECT days_present, days_absent, days_late, total_school_days
+        FROM attendance_summary 
+        WHERE student_id = ? AND class_arm_id = (
+            SELECT class_arm_id FROM student_classes 
+            WHERE student_id = ? AND session = ?
+        )
+        AND term = ? AND session = ?
+    """, (student_id, student_id, session, term, session))
+    attendance_summary = cursor.fetchone()
+
+    cursor.execute("""
+        SELECT handwriting, sports_participation, practical_skills,
+            punctuality, politeness, neatness,
+            class_teacher_comment, principal_comment
+        FROM student_assessments
+        WHERE student_id = ? AND class_arm_id = ? AND term = ? AND session = ?
+    """, (student["id"], class_arm_id, term, session))
+    assessment = cursor.fetchone()
+
+    total = sum(r["total_score"] or 0 for r in scores) if scores else 0
+    average = total / len(scores) if scores else 0
+
+    template_name = "full_term_report.html" if report_type == "full_term" else "half_term_report.html"
+
+    return render_template(template_name,
+                           student=student,
+                           class_name=student["class_name"],
+                           scores=scores,
+                           term=term,
+                           session=session,
+                           average=average,
+                           report_type=report_type,
+                           attendance_summary=attendance_summary,
+                           assessment=assessment,
+                           year=datetime.now().year,
+                           current_date=datetime.now().strftime("%Y-%m-%d"))
 
 @app.route('/download-student-template')
 def download_student_template():
@@ -1468,7 +1590,7 @@ def download_student_template():
 
 @app.route('/download-result-template')
 def download_result_template():
-    """Download Excel template for result uploads (supports GET form submission)."""
+    """Download Excel template for result uploads (auto formulas + locked names)."""
     class_arm_id = request.args.get('class_arm_id', type=int)
     subject_id = request.args.get('subject_id', type=int)
     term = request.args.get('term')
@@ -1480,7 +1602,7 @@ def download_result_template():
     db = get_db()
     cursor = db.cursor()
 
-    # Get subject + class info
+    # --- Subject & Class Info ---
     cursor.execute("""
         SELECT s.name AS subject_name, c.name AS class_name, a.arm
         FROM subjects s
@@ -1489,11 +1611,10 @@ def download_result_template():
         WHERE s.id = ?
     """, (class_arm_id, subject_id))
     info = cursor.fetchone()
-
     if not info:
         abort(404, description="Invalid class or subject selection")
 
-    # Get students in that class/session
+    # --- Get Students ---
     cursor.execute("""
         SELECT st.full_name
         FROM students st
@@ -1502,25 +1623,79 @@ def download_result_template():
         ORDER BY st.full_name
     """, (class_arm_id, session, term))
     students = cursor.fetchall()
-
     if not students:
         abort(404, description="No students found for this class/session")
 
-    # Build Excel template
+    # --- Create DataFrame ---
     data = {
-        'full_name': [s['full_name'] for s in students],
+        'Full Name': [s['full_name'] for s in students],
         'CA1': [''] * len(students),
         'CA2': [''] * len(students),
         'CA3': [''] * len(students),
         'CA4': [''] * len(students),
+        'CA Total': [''] * len(students),
         'Exam': [''] * len(students),
         'Total': [''] * len(students)
     }
     df = pd.DataFrame(data)
 
+    # --- Write to Excel ---
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, sheet_name='Results', index=False)
+    output.seek(0)
+
+    # --- Load workbook for styling, formulas, and protection ---
+    wb = load_workbook(output)
+    ws = wb.active
+
+    # --- Header Styling ---
+    header_fill = PatternFill(start_color="1E3C72", end_color="1E3C72", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    # --- Insert Formulas ---
+    ca_total_col = 6  # F
+    exam_col = 7      # G
+    total_col = 8     # H
+    num_students = len(students)
+
+    for i in range(2, num_students + 2):
+        # CA Total = SUM(B:E)
+        ws.cell(row=i, column=ca_total_col).value = f"=SUM(B{i}:E{i})"
+        # Total = F + G
+        ws.cell(row=i, column=total_col).value = f"=F{i}+G{i}"
+
+    # --- Freeze header row ---
+    ws.freeze_panes = "A2"
+
+    # --- Auto column width ---
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        ws.column_dimensions[column].width = max_length + 2
+
+    # --- Protect sheet ---
+    ws.protection.sheet = True
+    ws.protection.password = "kembos"  # You can change this password if you want
+
+    # Make only "Full Name" column locked, others editable
+    for row in ws.iter_rows(min_row=2, max_row=num_students + 1, min_col=1, max_col=8):
+        for cell in row:
+            if cell.column == 1:  # Full Name
+                cell.protection = Protection(locked=True)
+            else:
+                cell.protection = Protection(locked=False)
+
+    # --- Save to memory ---
+    output = BytesIO()
+    wb.save(output)
     output.seek(0)
 
     filename = f"result_template_{info['class_name']}_{info['arm']}_{info['subject_name']}.xlsx"
@@ -1632,13 +1807,15 @@ def subject_teacher_portal():
     cursor.execute("SELECT * FROM subjects ORDER BY name")
     subjects = cursor.fetchall()
 
-    cursor.execute("""
-        SELECT a.id AS arm_id, c.name AS class_name, a.arm
-        FROM class_arms a
-        JOIN classes c ON a.class_id = c.id
-        ORDER BY c.id, a.arm
-    """)
-    classes = cursor.fetchall()
+    # cursor.execute("""
+    #     SELECT a.id AS arm_id, c.name AS class_name, a.arm
+    #     FROM class_arms a
+    #     JOIN classes c ON a.class_id = c.id
+    #     ORDER BY c.id, a.arm
+    # """)
+    # classes = cursor.fetchall()
+
+    classes_with_data = get_class_status()
 
     # Optional: fetch last 10 uploads
     cursor.execute("""
@@ -1663,7 +1840,7 @@ def subject_teacher_portal():
     return render_template(
         'subject_teacher_portal.html',
         subjects=subjects,
-        classes=classes,
+        classes=classes_with_data,
         current_session=current_session,
         recent_uploads=recent_uploads
     )
@@ -1871,7 +2048,7 @@ def bulk_assessments(class_arm_id, term, session):
 def submit_bulk_assessments():
     class_arm_id = request.form['class_arm_id']
     term = request.form['term']
-    session = request.form['session']
+    session = get_current_session()
     
     db = get_db()
     cursor = db.cursor()
@@ -1896,7 +2073,8 @@ def submit_bulk_assessments():
         politeness = request.form.get(f'politeness_{student_id}')
         neatness = request.form.get(f'neatness_{student_id}')
         class_teacher_comment = request.form.get(f'class_teacher_comment_{student_id}', '')
-        
+        principal_comment = request.form.get(f'principal_comment_{student_id}', '')
+
         # Convert to integers if they exist
         handwriting = int(handwriting) if handwriting else None
         sports_participation = int(sports_participation) if sports_participation else None
@@ -1909,11 +2087,11 @@ def submit_bulk_assessments():
         cursor.execute('''INSERT OR REPLACE INTO student_assessments 
                           (student_id, class_arm_id, term, session, 
                            handwriting, sports_participation, practical_skills,
-                           punctuality, politeness, neatness, class_teacher_comment) 
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                           punctuality, politeness, neatness, class_teacher_comment, principal_comment) 
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                        (student_id, class_arm_id, term, session,
                         handwriting, sports_participation, practical_skills,
-                        punctuality, politeness, neatness, class_teacher_comment))
+                        punctuality, politeness, neatness, class_teacher_comment, principal_comment))
     
     db.commit()
     
@@ -1976,7 +2154,7 @@ def attendance_summary(class_arm_id, term, session):
 def submit_attendance_summary():
     class_arm_id = request.form['class_arm_id']
     term = request.form['term']
-    session = request.form['session']
+    session = get_current_session()
     total_school_days = int(request.form['total_school_days'])
     
     db = get_db()
@@ -1988,7 +2166,7 @@ def submit_attendance_summary():
         FROM students s
         JOIN student_classes sc ON s.id = sc.student_id
         WHERE sc.class_arm_id = ? AND sc.session = ?
-    """, (class_arm_id, session, term))
+    """, (class_arm_id, session))
     students = cursor.fetchall()
     
     for student in students:
@@ -2058,6 +2236,7 @@ def allowed_photo_file(filename):
            filename.rsplit('.', 1)[1].lower() in {'jpg', 'jpeg', 'png', 'gif'}
 
 if __name__ == "__main__":
+    init_db()
     # Automatically get your local network IP address
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)

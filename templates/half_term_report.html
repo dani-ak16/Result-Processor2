@@ -5,7 +5,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <style>
+    <!-- <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Montserrat', sans-serif;
@@ -217,14 +217,100 @@
             body { background: white; }
             .report-container { box-shadow: none; margin: 0; }
         }
+    </style> -->
+
+    <style>
+        /* === Print and PDF Optimization === */
+        @page {
+        size: A4;
+        margin: 1cm;
+        }
+        body {
+        font-size: 11px; /* Reduced font size for compactness */
+        line-height: 1.3;
+        }
+        .report-container {
+        max-width: 100%;
+        padding: 10px 20px;
+        transform: scale(0.95); /* Shrink slightly to fit one page */
+        transform-origin: top center;
+        }
+        /* Reduce header and section spacing */
+        .header {
+        padding: 15px 10px;
+        }
+        .logo-section {
+        gap: 10px;
+        margin-bottom: 10px;
+        }
+        .school-logo {
+        width: 60px;
+        height: 60px;
+        }
+        .school-info h1 {
+        font-size: 20px;
+        }
+        .report-title {
+        font-size: 16px;
+        margin: 10px 0;
+        }
+        .section-title {
+        font-size: 14px;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        }
+        /* Tighter table */
+        .results-table th, .results-table td {
+        padding: 6px 8px;
+        font-size: 10px;
+        }
+        /* Compact summary */
+        .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin: 15px 0;
+        }
+        .summary-card {
+        padding: 10px;
+        border-radius: 6px;
+        }
+        .summary-value {
+        font-size: 16px;
+        }
+        .summary-label {
+        font-size: 10px;
+        }
+        /* Compact assessment section */
+        .assessment-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 10px;
+        }
+        .assessment-table th, .assessment-table td {
+        padding: 6px 8px;
+        font-size: 9px;
+        }
+        /* Prevent page breaks in key sections */
+        .header, .student-section, .results-section, .footer-section {
+        page-break-inside: avoid;
+        }
+        .results-section {
+        page-break-before: auto;
+        page-break-after: auto;
+        }
+        /* Hide print button in PDF */
+        @media print {
+        .print-btn { display: none; }
+        }
     </style>
+
 </head>
 <body>
     <div class="report-container">
         <!-- Header -->
         <div class="header">
             <div class="logo-section">
-                <img src="{{ url_for('static', filename='/kembos_logo_nobg.png') }}" class="school-logo">
+                <img src="file://{{ logo_path }}" class="school-logo">
                 <div class="school-info">
                     <h1>KEMBOS COLLEGE</h1>
                     <p>23-25, Nusirat Lasisi Street, Off James Oni Street, Isolo, Lagos State</p>
@@ -265,7 +351,7 @@
                     </div>
                 </div>
                 {% if student.photo %}
-                    <img src="{{ url_for('serve_uploaded_photo', filename=student.photo) }}" class="student-photo">
+                <img src="file://{{ photo_path }}" class="student-photo" width="100" alt="Photo of {{ student.full_name}}">
                 {% endif %}
             </div>
         </div>
