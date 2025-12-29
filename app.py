@@ -30,40 +30,27 @@ else:
     app.config['UPLOAD_FOLDER'] = 'uploads/'
     print("Running on LOCAL environment")
 
-
 app.config['ALLOWED_EXTENSIONS'] = {'csv', 'xlsx'}
 
 # app.config['DATABASE'] = 'school_results copy.db'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'school_result_secret_key')
 
 # Create necessary directories
-# os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], "photos"), exist_ok=True)
-
-def get_db_render():
-    if 'db' not in g:
-        # Connect to database
-        db_path = app.config['DATABASE']
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Ensure directory exists
-        
-        g.db = sqlite3.connect(db_path)
-        g.db.row_factory = sqlite3.Row
-        
-        # Initialize database if needed
-        init_db()
     
-    return g.db
+# def get_db():
+#     db = getattr(g, '_database', None)
+#     if db is None:
+#         db = g._database = sqlite3.connect(app.config['DATABASE'])
+#         db.row_factory = sqlite3.Row
+#     return db
 
-# Database helper functions
-if os.environ.get('RENDER'):
-    get_db_render()
-    
 def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(app.config['DATABASE'])
-        db.row_factory = sqlite3.Row
-    return db
+    if 'db' not in g:
+        # os.makedirs(os.path.dirname(app.config['DATABASE']), exist_ok=True)
+        g.db = sqlite3.connect(app.config['DATABASE'])
+        g.db.row_factory = sqlite3.Row
+    return g.db
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -3113,6 +3100,9 @@ def generate_test_results():
 def allowed_photo_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in {'jpg', 'jpeg', 'png', 'gif'}
+
+with app.app_context():
+    init_db()
 
 if __name__ == "__main__":
     init_db()
