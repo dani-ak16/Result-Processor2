@@ -21,8 +21,8 @@ app = Flask(__name__)
 
 if os.environ.get('RENDER'):
     # Render production environment
-    app.config['DATABASE'] = '/var/data/school_results.db' 
-    app.config['UPLOAD_FOLDER'] = '/var/data/uploads/'  
+    app.config['DATABASE'] = '/tmp/school_results.db' 
+    app.config['UPLOAD_FOLDER'] = '/tmp/uploads/'  
     print("Running on RENDER environment")
 else:
     # Local development environment
@@ -65,7 +65,7 @@ def get_db_render():
         init_db()
     
     return g.db
-    
+
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
