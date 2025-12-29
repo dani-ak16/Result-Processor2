@@ -7,4 +7,5 @@ Pillow==10.4.0
 Werkzeug==3.0.3
 playwright==1.44.0
 python-dotenv==1.0.1
+greenlet==3.0.3
 gunicorn==23.0.0
