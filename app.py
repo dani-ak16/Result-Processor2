@@ -39,20 +39,10 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'school_result_secret_ke
 # Create necessary directories
 # os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], "photos"), exist_ok=True)
-
+    
 
 # Database helper functions
 if os.environ.get('RENDER'):
-    get_db_render()
-    
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(app.config['DATABASE'])
-        db.row_factory = sqlite3.Row
-    return db
-
-def get_db_render():
     if 'db' not in g:
         # Connect to database
         db_path = app.config['DATABASE']
@@ -65,6 +55,13 @@ def get_db_render():
         init_db()
     
     return g.db
+    
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(app.config['DATABASE'])
+        db.row_factory = sqlite3.Row
+    return db
 
 @app.teardown_appcontext
 def close_connection(exception):
