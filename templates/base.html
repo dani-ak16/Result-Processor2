@@ -1,28 +1,74 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>{% block title %}Kembos College{% endblock %}</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/styles.css" />
     {% block extra_css %}{% endblock %}
-</head>
-<body>
-    <nav style="background: #1e3c72; color: white; padding: 15px 20px; margin-bottom: 20px;">
-        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-            <a href="/" style="color: white; text-decoration: none; font-size: 20px; font-weight: bold;">
-                🏠 Kembos College
-            </a>
-            <div>
-                <a href="/class-teacher" style="color: white; text-decoration: none; margin-left: 20px;">Class Teacher</a>
-                <a href="/subject-teacher" style="color: white; text-decoration: none; margin-left: 20px;">Subject Teacher</a>
-                <a href="/students" style="color: white; text-decoration: none; margin-left: 20px;">View Students</a>
-            </div>
+  </head>
+  <style>
+    .school-logo {
+      width: 1rem;
+      height: 1rem;
+      border: 1px solid white;
+      object-fit: cover;
+    }
+  </style>
+  <body>
+    <nav
+      style="
+        background: #1e3c72;
+        color: white;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+      "
+    >
+      <div
+        style="
+          max-width: 1200px;
+          margin: 0 auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <a
+          href="/"
+          style="
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: bold;
+          "
+        >
+          <img
+            src="{{ url_for('static', filename='kembos_logo_nobg.png') }}"
+            alt=""
+            class="school-logo"
+          />
+          Kembos College
+        </a>
+        <div>
+          <a
+            href="/class-teacher"
+            style="color: white; text-decoration: none; margin-left: 20px"
+            >Class Teacher</a
+          >
+          <a
+            href="/subject-teacher"
+            style="color: white; text-decoration: none; margin-left: 20px"
+            >Subject Teacher</a
+          >
+          <a
+            href="/students"
+            style="color: white; text-decoration: none; margin-left: 20px"
+            >View Students</a
+          >
         </div>
+      </div>
     </nav>
 
-    <div class="container">
-        {% block content %}{% endblock %}
-    </div>
+    <div class="container">{% block content %}{% endblock %}</div>
 
     {% block scripts %}{% endblock %}
-</body>
+  </body>
 </html>

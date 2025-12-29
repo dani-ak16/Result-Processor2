@@ -1,43 +1,41 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Upload Successful</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
     <div class="container">
-        <h1>Upload Successful!</h1>
-        
-        <div class="success-message">
-            <p>{{ message }}</p>
-        </div>
+      <h1>Upload Successful!</h1>
 
-        {% if info_messages %}
-        <div class="info-section">
-            <h3>Processing Information:</h3>
-            <ul>
-                {% for msg in info_messages %}
-                <li>{{ msg }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
+      <div class="success-message">
+        <p>{{ message }}</p>
+      </div>
 
-        {% if warnings %}
-        <div class="warning-section">
-            <h3>Notes:</h3>
-            <ul>
-                {% for warning in warnings %}
-                <li>{{ warning }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
+      {% if info_messages %}
+      <div class="info-section">
+        <h3>Processing Information:</h3>
+        <ul>
+          {% for msg in info_messages %}
+          <li>{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %} {% if warnings %}
+      <div class="warning-section">
+        <h3>Notes:</h3>
+        <ul>
+          {% for warning in warnings %}
+          <li>{{ warning }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
 
-        <div class="actions">
-            <a href="/upload-results" class="btn">Upload More Results</a>
-            <a href="/" class="btn">Return to Home</a>
-        </div>
+      <div class="actions">
+        <a href="/subject-teacher" class="btn">Back to Portal</a>
+        <a href="/" class="btn">Return to Home</a>
+      </div>
     </div>
-</body>
+  </body>
 </html>

@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Result Sheet - {{ student.full_name }}</title>
-    <link
+    <!-- <link
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
       rel="stylesheet"
-    />
+    /> -->
     <style>
       * {
         margin: 0;
@@ -20,8 +20,13 @@
         margin: 8mm;
       }
 
+      @font-face {
+        font-family: "MyMontserrat";
+        src: url("../static/static/Montserrat-Regular.ttf");
+      }
+
       body {
-        font-family: "Montserrat", sans-serif;
+        font-family: "MyMontserrat", sans-serif;
         font-size: 9.5px;
         line-height: 1.35;
         color: #2c3e50;
@@ -199,7 +204,7 @@
       /* Summary Cards */
       .summary-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         gap: 6px;
         margin: 8px 0;
       }
@@ -267,7 +272,6 @@
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 6px;
-        margin: 8px 0;
         font-size: 8px;
       }
 
@@ -311,12 +315,12 @@
       .comment-text {
         min-height: 36px;
         color: #555;
-        font-size: 8px;
+        font-size: 10px;
       }
 
       .signature-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 8px;
         margin-top: 8px;
         font-size: 8px;
@@ -339,7 +343,7 @@
 
       .dates-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
         gap: 8px;
         margin-top: 8px;
         font-size: 8.5px;
@@ -393,7 +397,7 @@
           <div class="report-title">FIRST TERM REPORT SHEET</div>
           <div class="academic-info">
             <span>Session: {{ session }}</span>
-            <span>Term: {{ term }}</span>
+            <span>Term: {{ term }}ST</span>
           </div>
         </div>
       </div>
@@ -410,10 +414,10 @@
             <div class="detail-item">
               <span class="detail-label">Department:</span>
               <span>
-                {% if student.department_id == 1 %}Science {% elif
-                student.department_id == 2 %}Arts/Humanities {% elif
-                student.department_id == 3 %}Commercial {% else %}General{%
-                endif %}
+                {% if student.department_id == 1 %}Junior {% elif
+                student.department_id == 2 %}Science {% elif
+                student.department_id == 3 %}Arts/Humanities {% else
+                %}Commercial{% endif %}
               </span>
             </div>
             <div class="detail-item">
@@ -424,36 +428,44 @@
               <span class="detail-label">Gender:</span>
               <span>{{ student.gender or "N/A" }}</span>
             </div>
+
+            <div class="detail-item">
+              <span class="detail-label">Skills:</span>
+              <span>{{skills.name}} ({{skills.score}}%)</span>
+            </div>
           </div>
         </div>
 
-        <div class="attendance-grid">
-          <div class="attend-item">
-            <div>Total Days</div>
-            <div class="attend-value">
-              {{ attendance_summary.total_school_days or 0 }}
+        <div style="display: flex; flex-direction: column">
+          <span class="detail-label">ATTENDANCE SUMMARY</span>
+          <div class="attendance-grid">
+            <div class="attend-item">
+              <div>Total Days</div>
+              <div class="attend-value">
+                {{ attendance_summary.total_school_days or 0 }}
+              </div>
             </div>
-          </div>
-          <div class="attend-item">
-            <div>Present</div>
-            <div class="attend-value">
-              {{ attendance_summary.days_present or 0 }}
+            <div class="attend-item">
+              <div>Present</div>
+              <div class="attend-value">
+                {{ attendance_summary.days_present or 0 }}
+              </div>
             </div>
-          </div>
-          <div class="attend-item">
-            <div>Absent</div>
-            <div class="attend-value">
-              {{ attendance_summary.days_absent or 0 }}
+            <div class="attend-item">
+              <div>Absent</div>
+              <div class="attend-value">
+                {{ attendance_summary.days_absent or 0 }}
+              </div>
             </div>
-          </div>
-          <div class="attend-item">
-            <div>Rate</div>
-            <div class="attend-value">
-              {% if attendance_summary.total_school_days and
-              attendance_summary.total_school_days > 0 %} {{
-              "%.1f"|format((attendance_summary.days_present or 0) /
-              attendance_summary.total_school_days * 100) }}% {% else %}0%{%
-              endif %}
+            <div class="attend-item">
+              <div>Rate</div>
+              <div class="attend-value">
+                {% if attendance_summary.total_school_days and
+                attendance_summary.total_school_days > 0 %} {{
+                "%.0f"|format((attendance_summary.days_present or 0) /
+                attendance_summary.total_school_days * 100) }}% {% else %}0%{%
+                endif %}
+              </div>
             </div>
           </div>
         </div>
@@ -473,13 +485,13 @@
         <thead>
           <tr>
             <th>Subject</th>
-            <th>CA1</th>
-            <th>CA2</th>
-            <th>CA3</th>
-            <th>CA4</th>
+            <th>CA1 (5)</th>
+            <th>CA2 (5)</th>
+            <th>CA3 (5)</th>
+            <th>CA4 (5)</th>
             <th>CA Total</th>
-            <th>Exam</th>
-            <th>Grand Total</th>
+            <th>Exam (80)</th>
+            <th>Grand Total (100)</th>
             <th>Grade</th>
             <th>Remark</th>
           </tr>
@@ -493,16 +505,16 @@
             <td style="text-align: left; font-weight: 700">
               {{ row.subject }}
             </td>
-            <td>{{row.ca1_score}}</td>
-            <td>{{row.ca2_score}}</td>
-            <td>{{row.ca3_score}}</td>
-            <td>{{row.ca4_score}}</td>
+            <td>{{ "%.0f"| format(row.ca1_score) }}</td>
+            <td>{{ "%.0f"| format(row.ca2_score) }}</td>
+            <td>{{ "%.0f"| format(row.ca3_score) }}</td>
+            <td>{{ "%.0f"| format(row.ca4_score) }}</td>
             <td>
-              {{ row.ca1_score + row.ca2_score + row.ca3_score + row.ca4_score
-              }}
+              {{ "%.0f"| format(row.ca1_score + row.ca2_score + row.ca3_score +
+              row.ca4_score) }}
             </td>
-            <td>{{row.exam_score}}</td>
-            <td>{{ "%.1f"|format(row.total_score) }}</td>
+            <td>{{ "%.0f"| format(row.exam_score) }}</td>
+            <td>{{ "%.0f"|format(row.total_score) }}</td>
             <td class="{{ grade_class }}">
               {% if row.total_score >= 75 %}A1{% elif row.total_score >= 70
               %}B2{% elif row.total_score >= 65 %}B3{% elif row.total_score >=
@@ -511,9 +523,10 @@
               row.total_score >= 40 %}E8{% else %}F9{% endif %}
             </td>
             <td>
-              {% if row.total_score >= 80 %}Excellent{% elif row.total_score >=
-              70 %}Very Good{% elif row.total_score >= 60 %}Good{% elif
-              row.total_score >= 50 %}Pass{% else %}Fail{% endif %}
+              {% if row.total_score >= 75 %}Excellent{% elif row.total_score >=
+              70 %}Very Good{% elif row.total_score >= 65 %}Good{% elif
+              row.total_score >= 50 %}Credit{% elif row.total_score >= 40
+              %}Pass{% else %}Fail{% endif %}
             </td>
             <!-- <td>{{ loop.index }}/{{ scores|length }}</td> -->
           </tr>
@@ -523,16 +536,13 @@
 
       <div class="summary-grid">
         <div class="summary-card">
-          <div class="summary-value">{{ "%.1f"|format(average) }}%</div>
-          <div>Average</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-value">{{ scores|length }}</div>
-          <div>Subjects</div>
+          <div class="summary-value">{{ "%.2f"|format(average) }}%</div>
+          <div>Student Average</div>
         </div>
         <div class="summary-card">
           <div class="summary-value">
-            {{ scores|sum(attribute='total_score') }}/{{ 100 * scores|length}}
+            {{ "%.0f"|format(scores|sum(attribute='total_score')) }}/{{ 100 *
+            scores|length}}
           </div>
           <div>Total</div>
         </div>
@@ -541,8 +551,28 @@
             {% set passed = scores|selectattr('total_score', '>=',
             50)|list|length %} {{ passed }}/{{ scores|length }}
           </div>
-          <div>Passed</div>
+          <div>Subjects Passed</div>
         </div>
+
+        <div class="summary-card">
+          <div class="summary-value">{{class_average | round(2)}}%</div>
+          <div>Class Average</div>
+        </div>
+
+        {% if position and position <= 10 %}
+        <div class="summary-card">
+          <div class="summary-value">
+            {{ position }}{{ "st" if position == 1 else "nd" if position == 2
+            else "rd" if position == 3 else "th" }}
+          </div>
+          <div>Position</div>
+        </div>
+        {% endif %} {% if grade %}
+        <div class="summary-card">
+          <div class="summary-value">{{ grade }}</div>
+          <div>Grade</div>
+        </div>
+        {% endif %}
       </div>
 
       <!-- Development Assessment -->
@@ -644,78 +674,49 @@
         </div>
       </div>
 
-      <!-- <div class="attendance-grid">
-        <div class="attend-item">
-          <div>Total Days</div>
-          <div class="attend-value">
-            {{ attendance_summary.total_school_days or 0 }}
-          </div>
-        </div>
-        <div class="attend-item">
-          <div>Present</div>
-          <div class="attend-value">
-            {{ attendance_summary.days_present or 0 }}
-          </div>
-        </div>
-        <div class="attend-item">
-          <div>Absent</div>
-          <div class="attend-value">
-            {{ attendance_summary.days_absent or 0 }}
-          </div>
-        </div>
-        <div class="attend-item">
-          <div>Rate</div>
-          <div class="attend-value">
-            {% if attendance_summary.total_school_days and
-            attendance_summary.total_school_days > 0 %} {{
-            "%.1f"|format((attendance_summary.days_present or 0) /
-            attendance_summary.total_school_days * 100) }}% {% else %}0%{% endif
-            %}
-          </div>
-        </div>
-      </div> -->
-
       <!-- Comments & Signatures -->
       <div class="comments-grid">
         <div class="comment-box">
           <div class="comment-title">Class Teacher</div>
           <div class="comment-text">
-            {{ assessment.class_teacher_comment or "No comment available."}}
+            <strong
+              >{{ assessment.class_teacher_comment or "No comment
+              available."}}</strong
+            >
           </div>
         </div>
         <div class="comment-box">
           <div class="comment-title">Principal</div>
           <div class="comment-text">
-            {{ assessment.principal_comment or "No comment available."}}
+            <strong
+              >{{ assessment.principal_comment or "No comment
+              available."}}</strong
+            >
           </div>
         </div>
       </div>
 
       <div class="signature-grid">
         <div>
-          <div>Teacher's Signature</div>
-          <div class="signature-line"></div>
-          <div>Date: ________</div>
-        </div>
-        <div>
           <div>Principal's Signature</div>
-          <div class="signature-line"></div>
-          <div>Date: ________</div>
+          <div class="stamp-box">
+            <img
+              src="/static/Principal's signature.png"
+              alt=""
+              style="width: 50px; height: 60px"
+            />
+          </div>
         </div>
-        <div>
-          <div>School Stamp</div>
-          <div class="stamp-box"></div>
-        </div>
-      </div>
 
-      <div class="dates-grid">
-        <div class="date-item">
-          <div>Term Ends</div>
-          <div>15th Dec, {{ year }}</div>
-        </div>
-        <div class="date-item">
-          <div>Next Term</div>
-          <div>8th Jan, {{ year|int + 1 }}</div>
+        <div class="dates-grid">
+          <div class="date-item">
+            <div>Term Ends</div>
+            <div>19th Dec, {{ year }}</div>
+          </div>
+          <div class="date-item">
+            <div>Next Term</div>
+            <div>12th Jan, {{ year|int + 1 }}</div>
+          </div>
         </div>
       </div>
     </div>

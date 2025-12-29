@@ -1,0 +1,39 @@
+<head>
+    <title>Edit Student Details</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<h2>Edit Student Details</h2>
+
+<form action="{{ url_for('update_student', student_id=student.id) }}"
+      method="post" enctype="multipart/form-data">
+
+    <label>Name</label>
+    <input type="text" name="full_name" value="{{ student.full_name }}" required>
+
+    <label>Age</label>
+    <input type="number" name="age" value="{{ student.age }}">
+
+    <label>Gender</label>
+    <select name="gender" required>
+        <option {{ 'selected' if student.gender=='Male' }}>Male</option>
+        <option {{ 'selected' if student.gender=='Female' }}>Female</option>
+    </select>
+
+    <label>Department</label>
+    <select name="department_id">
+        {% for dept in departments %}
+            <option value="{{ dept.id }}" {% if dept.id == student.department_id %}selected{% endif %}>
+                {{ dept.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Change Photo (optional)</label>
+    <input type="file" name="photo" accept="image/*">
+
+    {% if student.photo %}
+    <img src="{{ url_for('serve_uploaded_photo', filename=student.photo) }}" width="120">
+    {% endif %}
+
+    <button type="submit">Save Changes</button>
+</form>

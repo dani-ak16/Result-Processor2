@@ -1,0 +1,38 @@
+<head>
+    <title>Student List</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<h2>Manage Students</h2>
+
+<form method="get">
+    <input type="text" name="search" placeholder="Search by name or reg no"
+           value="{{ search }}">
+    <button>Search</button>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Reg No</th>
+            <th>Name</th>
+            <th>Gender</th>
+            <th>Dept</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for s in students %}
+        <tr>
+            <td>{{ s.reg_number }}</td>
+            <td>{{ s.full_name }}</td>
+            <td>{{ s.gender }}</td>
+            <td>{{ s.dept_name or "-" }}</td>
+            <td>
+                <a href="{{ url_for('edit_student', student_id=s.id) }}" class="btn btn-primary btn-sm">
+                    Edit
+                </a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

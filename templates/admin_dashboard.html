@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin Dashboard - Kembos College</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .dashboard-container {
+        max-width: 1400px;
+        margin: 30px auto;
+        padding: 20px;
+      }
+
+      .dashboard-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .dashboard-header h1 {
+        color: #1e3c72;
+        margin-bottom: 10px;
+      }
+
+      .filters {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+      }
+
+      select,
+      input[type="text"],
+      button {
+        padding: 10px 14px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 1rem;
+      }
+
+      button {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        cursor: pointer;
+        border: none;
+        transition: 0.3s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+      }
+
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .kpi-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 20px;
+        text-align: center;
+      }
+
+      .kpi-card h4 {
+        margin: 0 0 10px;
+        color: #555;
+        font-size: 1.1rem;
+      }
+
+      .kpi-card .value {
+        font-size: 2.2rem;
+        font-weight: bold;
+        color: #1e3c72;
+      }
+
+      .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 40px;
+      }
+
+      .results-table th,
+      .results-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e9ecef;
+        text-align: left;
+      }
+
+      .results-table th {
+        background: #1e3c72;
+        color: white;
+      }
+
+      .chart-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 30px;
+        margin-top: 40px;
+      }
+
+      .chart-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 20px;
+      }
+
+      .approve-btn {
+        background: #28a745;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+      }
+
+      .reject-btn {
+        background: #dc3545;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+      }
+
+      .gender-table {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto 40px;
+      }
+    </style>
+  </head>
+  <body>
+    {% extends "base.html" %} {% block content %}
+
+    <div class="dashboard-container">
+      <div class="dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <p>Monitor, analyze, and manage academic performance across Kembos College</p>
+      </div>
+
+      <!-- Filters -->
+      <form method="GET" action="/admin-dashboard">
+        <div class="filters">
+          <select name="class_arm_id">
+            <option value="">All Classes</option>
+            {% for c in classes %}
+            <option value="{{ c.arm_id }}" {% if c.arm_id == class_arm_id %}selected{% endif %}>
+              {{ c.class_name }} {{ c.arm }}
+            </option>
+            {% endfor %}
+          </select>
+
+          <select name="term">
+            <option value="">All Terms</option>
+            <option value="1" {% if term == '1' %}selected{% endif %}>First Term</option>
+            <option value="2" {% if term == '2' %}selected{% endif %}>Second Term</option>
+            <option value="3" {% if term == '3' %}selected{% endif %}>Third Term</option>
+          </select>
+
+          <input
+            type="text"
+            name="session"
+            placeholder="Session (e.g. 2025/2026)"
+            value="{{ session if session else '' }}"
+          />
+
+          <select name="report_type">
+            <option value="full_term" {% if report_type == 'full_term' %}selected{% endif %}>Full Term</option>
+            <option value="half_term" {% if report_type == 'half_term' %}selected{% endif %}>Half Term</option>
+          </select>
+
+          <button type="submit">Apply Filters</button>
+        </div>
+      </form>
+
+      <!-- KPI Cards -->
+      {% if overall_stats %}
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <h4>Total Students</h4>
+          <div class="value">{{ overall_stats.total_students }}</div>
+        </div>
+        <div class="kpi-card">
+          <h4>School Average</h4>
+          <div class="value">{{ "%.1f"|format(overall_stats.school_average) }}%</div>
+        </div>
+        <div class="kpi-card">
+          <h4>Above 70%</h4>
+          <div class="value">{{ overall_stats.above_70 }} <small>({{ (overall_stats.above_70 / overall_stats.total_students * 100)|round(1) }}%)</small></div>
+        </div>
+        <div class="kpi-card">
+          <h4>Approved Reports</h4>
+          <div class="value">{{ overall_stats.approved_scores }} / {{ overall_stats.total_scores }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Gender Performance -->
+      {% if gender_performance %}
+      <h2 style="text-align:center; margin-bottom:20px;">Performance by Gender</h2>
+      <table class="results-table gender-table">
+        <thead>
+          <tr>
+            <th>Gender</th>
+            <th>Students</th>
+            <th>Average Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in gender_performance %}
+          <tr>
+            <td>{{ g.gender or 'Unknown' }}</td>
+            <td>{{ g.student_count }}</td>
+            <td>{{ "%.1f"|format(g.avg_score) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+      
+      <!-- Student Results Table -->
+      {% if students %}
+      <h2>Student Performance</h2>
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Class</th>
+            <th>Gender</th>
+            <th>Average</th>
+            <th>Status</th>
+            <th>View Report</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr>
+            <td>{{ s.full_name }}</td>
+            <td>{{ s.class_name }}</td>
+            <td>{{ s.gender or 'N/A' }}</td>
+            <td>{{ "%.1f"|format(s.average) }}</td>
+            <td>
+              {% if s.approved_count == s.subject_count and s.subject_count > 0 %}✅ Approved
+              {% elif s.approved_count > 0 %}⚠️ Partial
+              {% else %}⏳ Pending{% endif %}
+            </td>
+            <td>
+              <a href="/preview-report?student_id={{s.id}}&term={{term}}&session={{session}}&report_type={{report_type}}"
+                 target="_blank">View</a>
+            </td>
+            <td>
+              {% if s.approved_count < s.subject_count %}
+              <button class="approve-btn" onclick="approveResult('{{ s.id }}')">Approve</button>
+              <button class="reject-btn" onclick="rejectResult('{{ s.id }}')">Reject</button>
+              {% else %}
+              <em>Locked</em>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+      <!-- Charts -->
+      <div class="chart-section">
+        <div class="chart-card">
+          <h3>Class Average Comparison</h3>
+          <canvas id="classAveragesChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Top 10 Students</h3>
+          <canvas id="topStudentsChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Performance Benchmark (70%)</h3>
+          <canvas id="benchmarkChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Chart Data from Jinja
+      const classData = {{ class_avg_data | safe }};
+      const topStudentsData = {{ top_students_data | safe }};
+      const benchmarkData = {{ benchmark_data | safe }};
+
+      // Class Averages Chart
+      new Chart(document.getElementById('classAveragesChart'), {
+        type: 'bar',
+        data: {
+          labels: classData.labels,
+          datasets: [{
+            label: 'Average Score',
+            data: classData.values,
+            backgroundColor: '#1e3c72',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: { y: { beginAtZero: true, max: 100 } },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}% (${classData.counts[ctx.dataIndex]} students)`
+              }
+            }
+          }
+        }
+      });
+
+      // Top Students Chart
+      new Chart(document.getElementById('topStudentsChart'), {
+        type: 'bar',
+        data: {
+          labels: topStudentsData.labels,
+          datasets: [{
+            label: 'Average Score',
+            data: topStudentsData.values,
+            backgroundColor: '#28a745'
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          scales: { x: { beginAtZero: true, max: 100 } }
+        }
+      });
+
+      // Benchmark Doughnut Chart
+      new Chart(document.getElementById('benchmarkChart'), {
+        type: 'doughnut',
+        data: {
+          labels: benchmarkData.labels,
+          datasets: [{
+            data: benchmarkData.values,
+            backgroundColor: ['#28a745', '#dc3545'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.label}: ${ctx.raw} students`
+              }
+            }
+          }
+        }
+      });
+
+      // Approve/Reject functions (unchanged)
+      async function approveResult(id) {
+        await fetch(`/approve-result/${id}`, { method: 'POST' });
+        location.reload();
+      }
+
+      async function rejectResult(id) {
+        await fetch(`/reject-result/${id}`, { method: 'POST' });
+        location.reload();
+      }
+    </script>
+
+    {% endblock %}
+  </body>
+</html>
