@@ -1,0 +1,19 @@
+# Database
+*.db
+instance/
+
+# Uploads
+uploads/
+uploads/photos/
+uploads/results/
+
+# Environment
+.env
+venv/
+__pycache__/
+
+# OS files
+.DS_Store
+Thumbs.db
+school_results.db
+
