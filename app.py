@@ -2,8 +2,11 @@ import os
 import socket
 import pandas as pd
 import numpy as np
-from flask import Flask, render_template, request, redirect, abort, url_for, g, session, send_file, send_from_directory
+from flask import Flask, render_template, request, redirect, abort, url_for, g, session, flash, send_file, send_from_directory
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+from datetime import datetime
 from playwright.sync_api import sync_playwright
 import sqlite3
 import base64
@@ -62,6 +65,17 @@ def init_db():
     with app.app_context():
         db = get_db()
         cursor = db.cursor()
+
+        #Users
+        cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT UNIQUE NOT NULL,
+                        password_hash TEXT NOT NULL,
+                        role TEXT NOT NULL CHECK (
+                            role IN ('admin', 'class_teacher', 'subject_teacher')
+                        ),
+                        is_active BOOLEAN DEFAULT 1,
+                        created_at TEXT)''')
 
         # Classes table
         cursor.execute('''CREATE TABLE IF NOT EXISTS classes (
@@ -373,6 +387,26 @@ def init_db():
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in first", "warning")
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return wrapper
+
+def roles_required(*roles):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if session.get("role") not in roles:
+                flash("You do not have permission to access this page", "danger")
+                return redirect(url_for("login"))
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
 
 def generate_reg_number(class_name, arm, session, term, index):
     """
@@ -720,6 +754,52 @@ def initialize_class_subject_requirements():
 
 
 # Routes
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+
+        db = get_db()
+        cursor = db.cursor()
+
+        cursor.execute("""
+            SELECT id, username, password_hash, role
+            FROM users
+            WHERE username = ? AND is_active = 1
+        """, (username,))
+        user = cursor.fetchone()
+
+        if not user or not check_password_hash(user["password_hash"], password):
+            flash("Invalid username or password", "danger")
+            return render_template("login.html")
+
+        # ---- store session data ----
+        session.clear()
+        session["user_id"] = user["id"]
+        session["username"] = user["username"]
+        session["role"] = user["role"]
+
+        flash(f"Welcome back, {user['username']}!", "success")
+
+        # ---- redirect based on role ----
+        if user["role"] == "admin":
+            return redirect(url_for("admin_dashboard"))
+        elif user["role"] == "class_teacher":
+            return redirect(url_for("class_teacher_home"))
+        else:
+            return redirect(url_for("subject_teacher_home"))
+
+    return render_template("login.html")
+
+@app.route("/logout")
+@login_required
+def logout():
+    session.clear()
+    flash("You have been logged out", "info")
+    return redirect(url_for("login"))
+
 @app.route('/')
 def home():
     current_session = get_current_session()
@@ -1733,25 +1813,6 @@ def generate_reports():
             template_name = "half_term_report.html" if report_type == "half_term" else "full_term_report.html"
             logo_path = os.path.join(app.root_path, 'static', 'kembos_logo_nobg.png')
 
-            # html_content = render_template(template_name,
-            #                                student=student,
-            #                                class_name=student["class_name"],
-            #                                scores=scores,
-            #                                term=term,
-            #                                logo_path=logo_path,
-            #                                photo_path=photo_path,
-            #                                session=session,
-            #                                average=average,
-            #                                report_type=report_type,
-            #                                attendance_summary=attendance_summary,
-            #                                year=datetime.now().year,
-            #                                current_date=datetime.now().strftime("%Y-%m-%d"))
-
-            # pdf_file = f"{student['full_name']}_report.pdf"
-            # pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], pdf_file)
-            # HTML(string=html_content, base_url=request.host_url).write_pdf(pdf_path)
-
-            # return send_file(pdf_path, as_attachment=True)
 
             return render_template(template_name,
                                            student=student,
@@ -2182,7 +2243,58 @@ def download_result_template():
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
 
+
+def get_filtered_performance_base(class_arm_id, term, session, report_type):
+    # Returns (cte_sql, params)
+    parts = []
+    params = []
+
+    if class_arm_id:
+        parts.append("x.class_arm_id = ?")
+        params.append(class_arm_id)
+    if term:
+        parts.append("x.term = ?")
+        params.append(int(term))
+    if session:
+        parts.append("x.session = ?")
+        params.append(session)
+    if report_type:
+        parts.append("sc.report_type = ?")
+        params.append(report_type)
+
+    where = " AND ".join(parts) if parts else "1 = 1"
+
+    cte = f"""
+    WITH filtered_performance AS (
+        SELECT
+            s.id                AS student_id,
+            s.full_name,
+            s.gender,
+            s.reg_number,
+            x.class_arm_id,
+            c.name || ' ' || a.arm  AS class_name,
+            sc.subject_id,
+            sub.name            AS subject_name,
+            sub.level,
+            sc.total_score,
+            sc.approved,
+            AVG(sc.total_score) OVER (PARTITION BY s.id) AS student_avg,   -- optional window
+            sc.total_score
+        FROM students s
+        JOIN student_classes     x  ON s.id = x.student_id
+        JOIN class_arms          a  ON x.class_arm_id = a.id
+        JOIN classes             c  ON a.class_id = c.id
+        JOIN scores              sc ON s.id = sc.student_id AND x.class_arm_id = sc.class_arm_id
+        JOIN subjects            sub ON sc.subject_id = sub.id
+        WHERE {where}
+    )
+    """
+
+    return cte, params
+
 @app.route("/admin-dashboard", methods=["GET"])
+@login_required
+@roles_required("admin")
 def admin_dashboard():
     db = get_db()
     cursor = db.cursor()
@@ -2192,6 +2304,8 @@ def admin_dashboard():
     term = request.args.get("term")
     session = request.args.get("session")
     report_type = request.args.get("report_type", "full_term")
+
+    cte, params = get_filtered_performance_base(class_arm_id, term, session, report_type)
 
     # Fetch all class arms for dropdown/filter
     classes = cursor.execute("""
@@ -2274,28 +2388,36 @@ def admin_dashboard():
 
     
     # 4. Overall stats (using the fixed CTE version from previous response)
-    overall_query = f"""
-    WITH student_averages AS (
-        SELECT 
-            s.id,
-            AVG(sc.total_score) AS avg_score
-        FROM students s
-        JOIN scores sc ON s.id = sc.student_id
-        JOIN student_classes x ON s.id = x.student_id AND sc.class_arm_id = x.class_arm_id
-        WHERE {base_where} AND {report_where}
-        GROUP BY s.id
-        HAVING COUNT(sc.id) > 0
-    )
-    SELECT 
-        COUNT(*) AS total_students,
-        AVG(avg_score) AS school_average,
-        SUM(CASE WHEN avg_score >= 70 THEN 1 ELSE 0 END) AS above_70,
-        SUM(CASE WHEN avg_score < 70 THEN 1 ELSE 0 END) AS below_70,
-        (SELECT COUNT(*) FROM scores sc WHERE {base_where} AND sc.report_type = ? AND sc.approved = 1) AS approved_scores,
-        (SELECT COUNT(*) FROM scores sc WHERE {base_where} AND sc.report_type = ?) AS total_scores
-    FROM student_averages;
-    """
-    overall_stats = cursor.execute(overall_query, base_params_list + [report_type, report_type, report_type]).fetchone()
+    # overall_query = f"""
+    # WITH student_averages AS (
+    #     SELECT 
+    #         s.id,
+    #         AVG(sc.total_score) AS avg_score
+    #     FROM students s
+    #     JOIN scores sc ON s.id = sc.student_id
+    #     JOIN student_classes x ON s.id = x.student_id AND sc.class_arm_id = x.class_arm_id
+    #     WHERE {base_where} AND {report_where}
+    #     GROUP BY s.id
+    #     HAVING COUNT(sc.id) > 0
+    # )
+    # SELECT 
+    #     COUNT(*) AS total_students,
+    #     AVG(avg_score) AS school_average,
+    #     SUM(CASE WHEN avg_score >= 70 THEN 1 ELSE 0 END) AS above_70,
+    #     SUM(CASE WHEN avg_score < 70 THEN 1 ELSE 0 END) AS below_70,
+    #     (SELECT COUNT(*) FROM scores sc WHERE {base_where} AND sc.report_type = ? AND sc.approved = 1) AS approved_scores,
+    #     (SELECT COUNT(*) FROM scores sc WHERE {base_where} AND sc.report_type = ?) AS total_scores
+    # FROM student_averages;
+    # """
+    overall = cursor.execute(f"""
+        {cte}
+        SELECT
+            COUNT(DISTINCT student_id)                  AS total_students,
+            AVG(student_avg)                            AS school_average,
+            SUM(CASE WHEN student_avg >= 70 THEN 1 ELSE 0 END) AS above_70,
+            SUM(CASE WHEN student_avg <  70 THEN 1 ELSE 0 END) AS below_70
+        FROM filtered_performance
+        """, params).fetchone()
 
     # 5. Prepare chart data
     # Top 10 students (for bar/line chart)
@@ -2314,15 +2436,15 @@ def admin_dashboard():
     # Benchmark distribution (for pie/donut chart)
     benchmark_data = {
         "labels": ["Above 70%", "Below 70%"],
-        "values": [overall_stats["above_70"], overall_stats["below_70"]]
-    } if overall_stats else {"labels": [], "values": []}
+        "values": [overall["above_70"], overall["below_70"]]
+    } if overall else {"labels": [], "values": []}
 
     return render_template(
         "admin_dashboard.html",
         classes=classes,                    # for dropdown
         students=students,                  # full list or paginated
         class_averages=class_averages,      # table of class averages
-        overall_stats=overall_stats,        # KPIs: total students, school avg, etc.
+        overall_stats=overall,        # KPIs: total students, school avg, etc.
         gender_performance=gender_performance,
         term=term,
         session=session,
