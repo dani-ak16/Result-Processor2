@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>Class Teacher Portal - Kembos College</title>
@@ -141,7 +141,7 @@
     </style>
   </head>
   <body>
-    {% extends "base.html" %} {% block content %}
+    {% extends "main/base.html" %} {% block content %}
 
     <div class="portal-container">
       <div class="portal-header">
@@ -155,7 +155,7 @@
         <div class="class-grid">
           {% for class in classes %}
           <a
-            href="{{ url_for('class_teacher_class_view', class_arm_id=class.arm_id, session=current_session, term=current_term) }}"
+            href="{{ url_for('teacher.class_teacher_class_view', class_arm_id=class.arm_id, session=current_session, term=current_term) }}"
             class="class-card"
           >
             <h4>{{ class.class_name }} - {{ class.arm }}</h4>

@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>Subject Teacher Portal - Kembos College</title>
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
     <style>
       body {
         font-family: "Segoe UI", Arial, sans-serif;
@@ -197,7 +197,7 @@
     </style>
   </head>
   <body>
-    {% extends "base.html" %} {% block content %}
+    {% extends "main/base.html" %} {% block content %}
 
     <div class="portal-container">
       <div class="portal-header">
@@ -214,10 +214,10 @@
             Upload student scores for your subject, class, and term. You can
             upload full-term or half-term reports.
           </p>
-          <a href="/upload-half-term-results" class="btn"
+          <a href="/upload/half-term-results" class="btn"
             >Upload Half-Term Results</a
           >
-          <a href="/upload-full-term-results" class="btn"
+          <a href="/upload/full-term-results" class="btn"
             >Upload Full-Term Results</a
           >
         </div>

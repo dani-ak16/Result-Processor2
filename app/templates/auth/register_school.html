@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register Your School - Result Processor</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/register.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Left side - Branding -->
+      <div class="branding-section">
+        <div class="branding-content">
+          <div class="logo">
+            <i class="fas fa-graduation-cap"></i>
+            <h1>ResPro</h1>
+          </div>
+          <h2>Transform Your School's Result Management</h2>
+          <div class="features">
+            <div class="feature">
+              <i class="fas fa-check-circle"></i>
+              <span>Automated result processing</span>
+            </div>
+            <div class="feature">
+              <i class="fas fa-check-circle"></i>
+              <span>Secure data management</span>
+            </div>
+            <div class="feature">
+              <i class="fas fa-check-circle"></i>
+              <span>Real-time analytics</span>
+            </div>
+            <div class="feature">
+              <i class="fas fa-check-circle"></i>
+              <span>Easy student tracking</span>
+            </div>
+          </div>
+          <div class="testimonial">
+            <p>
+              "This platform has revolutionized how we manage student results.
+              Highly recommended!"
+            </p>
+            <span>- Principal, St. Mary's High School</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side - Registration Form -->
+      <div class="form-section">
+        <div class="form-container">
+          <div class="form-header">
+            <h2>Register Your School</h2>
+            <p>Get started with a free account today</p>
+          </div>
+
+          <!-- Flash Messages -->
+          {% with messages = get_flashed_messages(with_categories=true) %} {% if
+          messages %} {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            <i
+              class="fas fa-{{ 'exclamation-circle' if category == 'danger' else 'check-circle' }}"
+            ></i>
+            {{ message }}
+          </div>
+          {% endfor %} {% endif %} {% endwith %}
+
+          <form
+            method="POST"
+            action="{{ url_for('auth.register_school') }}"
+            id="registerForm"
+            novalidate
+          >
+            <!-- School Name -->
+            <div class="form-group">
+              <label for="school_name">
+                <i class="fas fa-school"></i>
+                School Name
+              </label>
+              <input
+                type="text"
+                id="school_name"
+                name="school_name"
+                placeholder="Enter your school name"
+                required
+                minlength="3"
+                maxlength="200"
+              />
+              <span class="error-message" id="school_name_error"></span>
+            </div>
+
+            <!-- Admin Username -->
+            <div class="form-group">
+              <label for="username">
+                <i class="fas fa-user"></i>
+                Admin Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="Choose a username"
+                required
+                pattern="[a-zA-Z0-9_-]{3,30}"
+                title="3-30 characters: letters, numbers, underscore, hyphen only"
+              />
+              <span class="error-message" id="username_error"></span>
+              <span class="hint"
+                >3-30 characters (letters, numbers, _ or - only)</span
+              >
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label for="email">
+                <i class="fas fa-envelope"></i>
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="school@example.com"
+                required
+              />
+              <span class="error-message" id="email_error"></span>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+              <label for="password">
+                <i class="fas fa-lock"></i>
+                Password
+              </label>
+              <div class="password-input-wrapper">
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  placeholder="Create a strong password"
+                  required
+                  minlength="8"
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  id="togglePassword"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <span class="error-message" id="password_error"></span>
+
+              <!-- Password Strength Indicator -->
+              <div class="password-strength">
+                <div class="strength-meter">
+                  <div class="strength-meter-fill" id="strengthMeter"></div>
+                </div>
+                <span class="strength-text" id="strengthText"></span>
+              </div>
+
+              <!-- Password Requirements -->
+              <div class="password-requirements">
+                <div class="requirement" id="req-length">
+                  <i class="fas fa-circle"></i>
+                  <span>At least 8 characters</span>
+                </div>
+                <div class="requirement" id="req-uppercase">
+                  <i class="fas fa-circle"></i>
+                  <span>One uppercase letter</span>
+                </div>
+                <div class="requirement" id="req-lowercase">
+                  <i class="fas fa-circle"></i>
+                  <span>One lowercase letter</span>
+                </div>
+                <div class="requirement" id="req-number">
+                  <i class="fas fa-circle"></i>
+                  <span>One number</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="terms" required />
+                <span
+                  >I agree to the
+                  <a href="#" target="_blank">Terms of Service</a> and
+                  <a href="#" target="_blank">Privacy Policy</a></span
+                >
+              </label>
+              <span class="error-message" id="terms_error"></span>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-submit" id="submitBtn">
+              <span>Register School</span>
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </form>
+
+          <div class="form-footer">
+            <p>
+              Already have an account?
+              <a href="{{ url_for('auth.login') }}">Sign in here</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/register.js') }}"></script>
+  </body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>resPro Admin Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <h2 class="logo">resPro</h2>
+
+        <nav>
+          <a href="#">Dashboard</a>
+          <a href="#">Students</a>
+          <a href="#">Teachers</a>
+          <a href="#">Classes</a>
+          <a href="#">Subjects</a>
+          <a href="#">Results</a>
+          <a href="#">Settings</a>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main">
+        <!-- Topbar -->
+        <header class="topbar">
+          <div>
+            <h3>Greenfield International School</h3>
+            <small>2025/2026 Session | 1st Term</small>
+          </div>
+
+          <div class="user-info">
+            <span>Welcome, Admin</span>
+            <button class="logout-btn">Logout</button>
+          </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <section class="cards">
+          <div class="card">
+            <h4>540</h4>
+            <p>Students</p>
+          </div>
+          <div class="card">
+            <h4>28</h4>
+            <p>Teachers</p>
+          </div>
+          <div class="card">
+            <h4>18</h4>
+            <p>Subjects</p>
+          </div>
+          <div class="card">
+            <h4>92%</h4>
+            <p>Results Uploaded</p>
+          </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="actions">
+          <h3>Quick Actions</h3>
+          <div class="action-buttons">
+            <button>Add Student</button>
+            <button>Add Teacher</button>
+            <button>Add Subject</button>
+            <button>Upload Results</button>
+          </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="activity">
+          <h3>Recent Activity</h3>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Action</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>John Doe</td>
+                <td>Added as Student</td>
+                <td>Feb 18, 2026</td>
+              </tr>
+              <tr>
+                <td>Mrs. Adebayo</td>
+                <td>Uploaded Results</td>
+                <td>Feb 17, 2026</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

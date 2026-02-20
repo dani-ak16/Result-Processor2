@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Academic Report - {{ student.full_name }}</title>
+    <style>
+      /* Compact Design - Single Page */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+
+      @page {
+        size: A4;
+        margin: 4mm; /* Reduced margins for more space */
+      }
+
+      body {
+        font-size: 8px; /* Smaller base font */
+        line-height: 1.2;
+        color: #2c3e50;
+        background: #fff;
+        width: 210mm;
+        height: 297mm;
+        padding: 0;
+        margin: 0;
+      }
+
+      .container {
+        width: 100%;
+        height: 100%;
+        padding: 6mm; /* Reduced padding */
+        background: white;
+      }
+
+      /* Ultra Compact Header */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 3mm;
+        padding-bottom: 2mm;
+        border-bottom: 1px solid #3498db;
+      }
+
+      .school-info {
+        flex: 1;
+      }
+
+      .school-info h1 {
+        font-size: 10px;
+        color: #2c3e50;
+        margin-bottom: 1px;
+      }
+
+      .school-info p {
+        font-size: 7px;
+        color: #666;
+        line-height: 1.1;
+      }
+
+      .report-title {
+        text-align: right;
+        min-width: 40mm;
+      }
+
+      .report-title h2 {
+        font-size: 11px;
+        color: #2c3e50;
+        margin-bottom: 1mm;
+      }
+
+      .term-badge {
+        background: #3498db;
+        color: white;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-size: 7px;
+        font-weight: 600;
+        display: inline-block;
+      }
+
+      /* Compact Student Profile */
+      .student-profile {
+        display: grid;
+        grid-template-columns: 2fr 1fr 0.8fr;
+        gap: 3mm;
+        margin-bottom: 3mm;
+        padding: 2mm;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border-left: 3px solid #3498db;
+      }
+
+      .student-info h3 {
+        font-size: 10px;
+        color: #2c3e50;
+        margin-bottom: 1mm;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1mm 2mm;
+        font-size: 7px;
+      }
+
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 1px;
+        border-bottom: 0.5px dashed #ddd;
+      }
+
+      .info-label {
+        font-weight: 600;
+        color: #3498db;
+        min-width: 20mm;
+      }
+
+      .info-value {
+        text-align: right;
+        font-weight: 500;
+      }
+
+      /* Mini Attendance */
+      .mini-attendance {
+        background: white;
+        padding: 1.5mm;
+        border-radius: 3px;
+        border: 0.5px solid #ddd;
+      }
+
+      .mini-attendance h4 {
+        font-size: 8px;
+        color: #2c3e50;
+        margin-bottom: 1mm;
+        text-align: center;
+      }
+
+      .attendance-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1mm;
+      }
+
+      .att-stat {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 10px;
+        font-weight: 700;
+        color: #2c3e50;
+      }
+
+      .stat-label {
+        font-size: 6px;
+        color: #666;
+      }
+
+      /* Student Photo - Smaller */
+      .student-photo {
+        width: 25mm;
+        height: 25mm;
+        border: 1px solid #2c3e50;
+        border-radius: 3px;
+        object-fit: cover;
+      }
+
+      /* Compact Performance Summary */
+      .performance-summary {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1.5mm;
+        margin-bottom: 3mm;
+      }
+
+      .summary-card {
+        background: white;
+        padding: 1.5mm;
+        border-radius: 3px;
+        border: 0.5px solid #e0e0e0;
+        text-align: center;
+      }
+
+      .summary-value {
+        font-size: 12px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 1mm 0;
+      }
+
+      .summary-label {
+        font-size: 6.5px;
+        color: #666;
+        text-transform: uppercase;
+      }
+
+      /* Ultra Compact Table */
+      .table-container {
+        margin-bottom: 2mm;
+        overflow: visible;
+      }
+
+      .compact-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 7px;
+      }
+
+      .compact-table thead th {
+        background: #2c3e50;
+        color: white;
+        padding: 1.5mm 0.5mm;
+        font-weight: 600;
+        text-align: center;
+        border-right: 0.5px solid #3a506b;
+      }
+
+      .compact-table thead th:last-child {
+        border-right: none;
+      }
+
+      .compact-table tbody td {
+        padding: 1mm 0.5mm;
+        text-align: center;
+        border-bottom: 0.5px solid #eee;
+      }
+
+      .compact-table tbody tr:nth-child(even) {
+        background: #f8f9fa;
+      }
+
+      .subject-cell {
+        text-align: left !important;
+        font-weight: 600;
+        padding-left: 1mm !important;
+        font-size: 7.5px;
+      }
+
+      .highlight-cell {
+        font-weight: 700;
+        background: #f0f7ff;
+      }
+
+      /* Mini Grade Indicator */
+      .mini-grade {
+        display: inline-block;
+        width: 8mm;
+        height: 4mm;
+        line-height: 4mm;
+        border-radius: 2px;
+        font-size: 7px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .grade-A {
+        background: #27ae60;
+        color: white;
+      }
+      .grade-B {
+        background: #3498db;
+        color: white;
+      }
+      .grade-C {
+        background: #f39c12;
+        color: white;
+      }
+      .grade-D {
+        background: #e74c3c;
+        color: white;
+      }
+      .grade-F {
+        background: #c0392b;
+        color: white;
+      }
+
+      /* Compact Assessment Section */
+      .compact-assessment {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2mm;
+        margin: 3mm 0;
+      }
+
+      .assessment-block {
+        background: white;
+        padding: 2mm;
+        border-radius: 3px;
+        border: 0.5px solid #ddd;
+      }
+
+      .assessment-block h4 {
+        font-size: 8px;
+        color: #2c3e50;
+        margin-bottom: 1.5mm;
+        padding-bottom: 1mm;
+        border-bottom: 0.5px solid #eee;
+      }
+
+      .skill-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5mm 0;
+        font-size: 7px;
+      }
+
+      .skill-name {
+        flex: 1;
+      }
+
+      .dot-rating {
+        display: flex;
+        gap: 1px;
+      }
+
+      .rating-dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #ddd;
+      }
+
+      .rating-dot.filled {
+        background: #f1c40f;
+      }
+
+      /* Comments - Very Compact */
+      .comments-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2mm;
+        margin: 3mm 0 2mm 0;
+      }
+
+      .comment-box {
+        padding: 2mm;
+        background: #f8f9fa;
+        border-radius: 3px;
+        border-left: 2px solid #3498db;
+      }
+
+      .comment-title {
+        font-size: 8px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 1mm;
+      }
+
+      .comment-text {
+        font-size: 7px;
+        line-height: 1.3;
+        color: #333;
+        min-height: 10mm;
+      }
+
+      /* Compact Footer */
+      .footer {
+        margin-top: 3mm;
+        padding-top: 2mm;
+        border-top: 1px solid #ddd;
+        font-size: 7px;
+      }
+
+      .signature-area {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 2mm;
+        margin-bottom: 2mm;
+      }
+
+      .signature-box {
+        text-align: center;
+      }
+
+      .signature-line {
+        width: 25mm;
+        height: 0.5px;
+        background: #333;
+        margin: 4mm auto 1mm;
+      }
+
+      .signature-label {
+        color: #666;
+        font-weight: 600;
+      }
+
+      .dates-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1mm;
+        background: #f0f7ff;
+        padding: 1.5mm;
+        border-radius: 3px;
+      }
+
+      .date-item {
+        text-align: center;
+      }
+
+      .date-label {
+        color: #666;
+        font-size: 6.5px;
+      }
+
+      .date-value {
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      /* Print Optimizations */
+      @media print {
+        body {
+          width: 210mm;
+          height: 297mm;
+          margin: 0;
+          padding: 0;
+        }
+
+        .container {
+          padding: 5mm;
+          height: auto;
+          min-height: 287mm;
+        }
+
+        @page {
+          margin: 5mm;
+        }
+
+        /* Force single page */
+        .container {
+          page-break-inside: avoid;
+          page-break-after: avoid;
+        }
+
+        /* Remove backgrounds for better printing */
+        .student-profile,
+        .comment-box,
+        .dates-row {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+
+      /* Utility Classes */
+      .text-center {
+        text-align: center;
+      }
+      .text-right {
+        text-align: right;
+      }
+      .bold {
+        font-weight: 700;
+      }
+      .text-small {
+        font-size: 6.5px;
+      }
+      .mb-1 {
+        margin-bottom: 1mm;
+      }
+      .mt-1 {
+        margin-top: 1mm;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="school-info">
+          <h1>AWESOME COLLEGE</h1>
+          <p>
+            23-25, Awesome Street, Off Wonderful Street, Great City, Lagos State
+          </p>
+          <p class="text-small">
+            Email: awesome@gmail.com | Phone: +2341234567890
+          </p>
+        </div>
+        <div class="report-title">
+          <h2>ACADEMIC REPORT</h2>
+          <div class="term-badge">{{ term }} TERM {{ session }}</div>
+        </div>
+      </div>
+
+      <!-- Student Profile -->
+      <div class="student-profile">
+        <div class="student-info">
+          <h3>{{ student.full_name }}</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Class:</span>
+              <span class="info-value">{{ class_name }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Department:</span>
+              <span class="info-value">
+                {% if student.department_id == 1 %}Junior {% elif
+                student.department_id == 2 %}Science {% elif
+                student.department_id == 3 %}Arts {% else %}Commercial {% endif
+                %}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Age/Gender:</span>
+              <span class="info-value"
+                >{{ student.age or 'N/A' }} / {{ student.gender or 'N/A'
+                }}</span
+              >
+            </div>
+            <div class="info-item">
+              <span class="info-label">Admission No:</span>
+              <span class="info-value"
+                >{{ student.admission_no or 'N/A' }}</span
+              >
+            </div>
+            <div class="info-item">
+              <span class="info-label">Special Skill:</span>
+              <span class="info-value"
+                >{{ skills.name }} ({{ skills.score }}%)</span
+              >
+            </div>
+            <div class="info-item">
+              <span class="info-label">Student ID:</span>
+              <span class="info-value">{{ student.id or 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mini-attendance">
+          <h4>ATTENDANCE</h4>
+          <div class="attendance-stats">
+            <div class="att-stat">
+              <div class="stat-value">
+                {{ attendance_summary.total_school_days or 0 }}
+              </div>
+              <div class="stat-label">Total Days</div>
+            </div>
+            <div class="att-stat">
+              <div class="stat-value" style="color: #27ae60">
+                {{ attendance_summary.days_present or 0 }}
+              </div>
+              <div class="stat-label">Present</div>
+            </div>
+            <div class="att-stat">
+              <div class="stat-value">
+                {{ attendance_summary.days_absent or 0 }}
+              </div>
+              <div class="stat-label">Absent</div>
+            </div>
+            <div class="att-stat">
+              <div class="stat-value">
+                {% if attendance_summary.total_school_days and
+                attendance_summary.total_school_days > 0 %} {{
+                "%.0f"|format((attendance_summary.days_present or 0) /
+                attendance_summary.total_school_days * 100) }}% {% else %}0%{%
+                endif %}
+              </div>
+              <div class="stat-label">Rate</div>
+            </div>
+          </div>
+        </div>
+
+        {% if student.photo %}
+        <div class="text-center">
+          <img src="../assets/dummy_dp.png" class="student-photo" alt="Photo" />
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Performance Summary -->
+      <div class="performance-summary">
+        <div class="summary-card">
+          <div class="summary-value">{{ "%.1f"|format(average) }}%</div>
+          <div class="summary-label">Student Avg</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-value">{{ class_average | round(1) }}%</div>
+          <div class="summary-label">Class Avg</div>
+        </div>
+        <div class="summary-card">
+          {% set passed = scores|selectattr('total_score', '>=', 50)|list|length
+          %}
+          <div class="summary-value">{{ passed }}/{{ scores|length }}</div>
+          <div class="summary-label">Passed</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-value">
+            {{ "%.0f"|format(scores|sum(attribute='total_score')) }}/{{ 100 *
+            scores|length}}
+          </div>
+          <div class="summary-label">Total Score</div>
+        </div>
+        <div class="summary-card">
+          {% if position %}
+          <div class="summary-value">
+            {{ position }}{{ "st" if position == 1 else "nd" if position == 2
+            else "rd" if position == 3 else "th" }}
+          </div>
+          <div class="summary-label">Position</div>
+          {% elif grade %}
+          <div class="summary-value">{{ grade }}</div>
+          <div class="summary-label">Grade</div>
+          {% else %}
+          <div class="summary-value">--</div>
+          <div class="summary-label">Position</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Results Table -->
+      <div class="table-container">
+        <table class="compact-table">
+          <thead>
+            <tr>
+              <th width="18%">SUBJECT</th>
+              <th width="7%">CA1</th>
+              <th width="7%">CA2</th>
+              <th width="7%">CA3</th>
+              <th width="7%">CA4</th>
+              <th width="8%">CA TOT</th>
+              <th width="8%">EXAM</th>
+              <th width="8%">TOTAL</th>
+              <th width="8%">GRADE</th>
+              <th width="12%">REMARK</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in scores %} {% set grade_class = 'grade-A' if
+            row.total_score >= 75 else 'grade-B' if row.total_score >= 65 else
+            'grade-C' if row.total_score >= 55 else 'grade-D' if row.total_score
+            >= 40 else 'grade-F' %}
+            <tr>
+              <td class="subject-cell">{{ row.subject }}</td>
+              <td>{{ "%.0f"|format(row.ca1_score) }}</td>
+              <td>{{ "%.0f"|format(row.ca2_score) }}</td>
+              <td>{{ "%.0f"|format(row.ca3_score) }}</td>
+              <td>{{ "%.0f"|format(row.ca4_score) }}</td>
+              <td class="highlight-cell">
+                {{ "%.0f"|format(row.ca1_score + row.ca2_score + row.ca3_score +
+                row.ca4_score) }}
+              </td>
+              <td class="highlight-cell">
+                {{ "%.0f"|format(row.exam_score) }}
+              </td>
+              <td class="highlight-cell bold">
+                {{ "%.0f"|format(row.total_score) }}
+              </td>
+              <td>
+                <span class="mini-grade {{ grade_class }}">
+                  {% if row.total_score >= 75 %}A1 {% elif row.total_score >= 70
+                  %}B2 {% elif row.total_score >= 65 %}B3 {% elif
+                  row.total_score >= 60 %}C4 {% elif row.total_score >= 55 %}C5
+                  {% elif row.total_score >= 50 %}C6 {% elif row.total_score >=
+                  45 %}D7 {% elif row.total_score >= 40 %}E8 {% else %}F9 {%
+                  endif %}
+                </span>
+              </td>
+              <td class="text-small">
+                {% if row.total_score >= 75 %}Excellent {% elif row.total_score
+                >= 70 %}V.Good {% elif row.total_score >= 65 %}Good {% elif
+                row.total_score >= 50 %}Credit {% elif row.total_score >= 40
+                %}Pass {% else %}Fail {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Development Assessment -->
+      <div class="compact-assessment">
+        <div class="assessment-block">
+          <h4>PSYCHOMOTOR SKILLS</h4>
+          <div class="skill-row">
+            <span class="skill-name">Handwriting</span>
+            <div class="dot-rating">
+              {% for i in range(5) %}
+              <div
+                class="rating-dot {% if assessment.handwriting and i < assessment.handwriting %}filled{% endif %}"
+              ></div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="skill-row">
+            <span class="skill-name">Sports</span>
+            <div class="dot-rating">
+              {% for i in range(5) %}
+              <div
+                class="rating-dot {% if assessment.sports_participation and i < assessment.sports_participation %}filled{% endif %}"
+              ></div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="skill-row">
+            <span class="skill-name">Practical Skills</span>
+            <div class="dot-rating">
+              {% for i in range(5) %}
+              <div
+                class="rating-dot {% if assessment.practical_skills and i < assessment.practical_skills %}filled{% endif %}"
+              ></div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="assessment-block">
+          <h4>AFFECTIVE TRAITS</h4>
+          <div class="skill-row">
+            <span class="skill-name">Punctuality</span>
+            <div class="dot-rating">
+              {% for i in range(5) %}
+              <div
+                class="rating-dot {% if assessment.punctuality and i < assessment.punctuality %}filled{% endif %}"
+              ></div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="skill-row">
+            <span class="skill-name">Politeness</span>
+            <div class="dot-rating">
+              {% for i in range(5) %}
+              <div
+                class="rating-dot {% if assessment.politeness and i < assessment.politeness %}filled{% endif %}"
+              ></div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="skill-row">
+            <span class="skill-name">Neatness</span>
+            <div class="dot-rating">
+              {% for i in range(5) %}
+              <div
+                class="rating-dot {% if assessment.neatness and i < assessment.neatness %}filled{% endif %}"
+              ></div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comments -->
+      <div class="comments-row">
+        <div class="comment-box">
+          <div class="comment-title">CLASS TEACHER'S COMMENT</div>
+          <div class="comment-text">
+            {{ assessment.teacher_comment or "John shows good participation in
+            class. Needs improvement in mathematics." }}
+          </div>
+        </div>
+        <div class="comment-box">
+          <div class="comment-title">PRINCIPAL'S COMMENT</div>
+          <div class="comment-text">
+            {{ assessment.principal_comment or "Satisfactory performance. Keep
+            up the good work and focus on weak areas." }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <div class="signature-area">
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-label">Class Teacher's Signature</div>
+          </div>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-label">Head of Department</div>
+          </div>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-label">Principal's Signature</div>
+          </div>
+        </div>
+
+        <div class="dates-row">
+          <div class="date-item">
+            <div class="date-label">TERM BEGINS</div>
+            <div class="date-value">Sept 10, {{ year }}</div>
+          </div>
+          <div class="date-item">
+            <div class="date-label">TERM ENDS</div>
+            <div class="date-value">Dec 19, {{ year }}</div>
+          </div>
+          <div class="date-item">
+            <div class="date-label">NEXT TERM</div>
+            <div class="date-value">Jan 12, {{ year|int + 1 }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

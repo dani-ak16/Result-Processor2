@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ResPro | Smart School Result Processing</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/landing.css') }}"
+    />
+  </head>
+
+  <body>
+    <!-- NAVBAR -->
+
+    <header class="navbar">
+      <div class="logo">ResPro</div>
+
+      <nav class="nav-links">
+        <a href="{{ url_for('auth.login') }}">Login</a>
+
+        <a href="{{ url_for('auth.register_school') }}" class="btn-primary">
+          Get Started
+        </a>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+
+    <section class="hero">
+      <h1>Smart Result Processing for Schools</h1>
+
+      <p>
+        Manage results, reports, analytics, and performance tracking in one
+        secure platform.
+      </p>
+
+      <div class="hero-buttons">
+        <a href="{{ url_for('auth.register_school') }}" class="btn-primary">
+          Register Your School
+        </a>
+
+        <a href="{{ url_for('auth.login') }}" class="btn-secondary"> Login </a>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+
+    <section class="features">
+      <h2>Why Choose ResPro?</h2>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <h4>📊 Automated Results</h4>
+          <p>Upload and calculate scores instantly.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>📈 Analytics</h4>
+          <p>Track best students and class averages.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>🔐 Secure Access</h4>
+          <p>Role-based user authentication.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>🏫 Multi-School</h4>
+          <p>Each school runs independently.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>📄 Reports</h4>
+          <p>Generate printable report sheets.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>⚡ Fast</h4>
+          <p>Optimized for speed and reliability.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+
+    <section class="how">
+      <h2>How It Works</h2>
+
+      <div class="steps">
+        <div class="step">1️⃣ Register</div>
+        <div class="step">2️⃣ Add Data</div>
+        <div class="step">3️⃣ Upload Scores</div>
+        <div class="step">4️⃣ Generate Reports</div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+
+    <section class="cta">
+      <h2>Ready to Get Started?</h2>
+
+      <p>Join schools using ResPro to manage academic results.</p>
+
+      <a href="{{ url_for('auth.register_school') }}" class="btn-primary large">
+        Register Now
+      </a>
+    </section>
+
+    <!-- FOOTER -->
+
+    <footer>
+      <p>© {{ datetime.utcnow().year }} ResPro. All rights reserved.</p>
+    </footer>
+  </body>
+</html>

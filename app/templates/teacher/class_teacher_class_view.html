@@ -278,7 +278,7 @@
 </head>
 <body>
 
-    {% extends "base.html" %}
+    {% extends "main/base.html" %}
 
     {% block content %}
         <div class="class-management-container">
@@ -292,7 +292,7 @@
                 <!-- <h3>📊 Student Management</h3>
                     <p>Upload student data, manage attendance records, and upload photos.</p> -->
                     <a href="/manage-students" class="btn">Upload Student Data</a>
-                    <a href="{{ url_for('attendance_summary', class_arm_id=class_arm_id, term=term, session=session) }}" class="btn">
+                    <a href="{{ url_for('assessments.attendance_summary', class_arm_id=class_arm_id, term=term, session=session) }}" class="btn">
                         📊 Record Attendance Summary
                     </a>
                     <a href="/student-photos" class="btn">Manage Photos</a>
@@ -471,7 +471,7 @@
                     <input type="hidden" name="session" value="{{ session }}">
                     
                     <div style="margin: 20px 0;">
-                        <a href="{{ url_for('bulk_assessments', class_arm_id=class_arm_id, term=term, session=session) }}" class="btn">
+                        <a href="{{ url_for('assessments.bulk_assessments', class_arm_id=class_arm_id, term=term, session=session) }}" class="btn">
                             📊 Bulk Assessment Management
                         </a>
                     </div>
@@ -483,23 +483,6 @@
             </div>
         </div>
 
-        <div id="attendanceModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-            <div style="background: white; margin: 50px auto; padding: 30px; border-radius: 10px; max-width: 500px;">
-                <h3>Record Attendance</h3>
-                <form action="{{ url_for('attendance_sheet_redirect') }}" method="GET">
-                    <input type="hidden" name="class_arm_id" value="{{ class_arm_id }}">
-                    <input type="hidden" name="term" value="{{ term }}">
-                    
-                    <div class="form-group">
-                        <label>Date:</label>
-                        <input type="date" name="date" value="{{ current_date }}" required>
-                    </div>
-                    
-                    <button type="submit" class="btn">Continue to Attendance Sheet</button>
-                    <button type="button" class="btn btn-secondary" onclick="hideAttendanceModal()">Cancel</button>
-                </form>
-            </div>
-        </div>
         <script>
             function showReportType(reportType) {
             // Hide all status containers
