@@ -470,12 +470,11 @@ def get_current_session():
 def get_current_term():
     """Get current term based on current month"""
     month = datetime.now().month
-    if month in [1, 2, 3, 4]:
-        return 3  # Third term
-    elif month in [5, 6, 7, 8]:
-        return 2  # Second term
-    else:
-        return 1  # First term
+    if month <= 4:
+        return 2
+    elif month <= 8:
+        return 3
+    return 1
 
 def initialize_subjects_and_departments():
     """Initialize subjects and departments with proper relationships"""
